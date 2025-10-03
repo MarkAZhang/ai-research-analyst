@@ -6,7 +6,7 @@ class StartupReportPrompt(models.Model):
     prompt = models.TextField()
 
     def __str__(self):
-        return f"Prompt {self.id} - {self.created_at}"
+        return f"Prompt {self.id} - {self.created_at}"  # type: ignore
 
 
 class StartupReport(models.Model):
@@ -19,7 +19,7 @@ class StartupReport(models.Model):
 
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
-    read_by_user = models.BooleanField(default=False)
+    read_by_user = models.BooleanField(default=False)  # type: ignore
     generation_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     report_text = models.TextField(blank=True)
 

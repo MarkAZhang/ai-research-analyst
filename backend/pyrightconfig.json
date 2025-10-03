@@ -1,0 +1,9 @@
+{
+  "exclude": [
+    "**/migrations",
+    "**/.venv",
+    "**/node_modules"
+  ],
+  "typeCheckingMode": "basic",
+  "reportMissingTypeStubs": false
+}

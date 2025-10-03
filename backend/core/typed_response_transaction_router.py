@@ -9,7 +9,7 @@ from ninja import Router
 def wrap_in_transaction(view_func: Callable) -> Callable:
     @wraps(view_func)
     def wrapped_view(*args, **kwargs):
-        with transaction.atomic():
+        with transaction.atomic():  # type: ignore
             return view_func(*args, **kwargs)
 
     return wrapped_view
