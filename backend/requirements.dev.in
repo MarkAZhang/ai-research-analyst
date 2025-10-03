@@ -2,3 +2,4 @@
 
 pyright
 pre-commit
+django-stubs

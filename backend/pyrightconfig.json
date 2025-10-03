@@ -5,5 +5,7 @@
     "**/node_modules"
   ],
   "typeCheckingMode": "basic",
-  "reportMissingTypeStubs": false
+  "reportMissingTypeStubs": false,
+  "pythonPlatform": "All",
+  "stubPath": ""
 }

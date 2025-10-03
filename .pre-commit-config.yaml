@@ -7,7 +7,6 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
-        exclude: ^backend/core/migrations/.*
 
       - id: frontend-lint
         name: frontend-lint

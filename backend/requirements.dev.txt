@@ -20,8 +20,14 @@ django==5.2.7
     # via
     #   -r requirements.txt
     #   django-ninja
+    #   django-stubs
+    #   django-stubs-ext
 django-ninja==1.4.3
     # via -r requirements.txt
+django-stubs==5.2.5
+    # via -r requirements.dev.in
+django-stubs-ext==5.2.5
+    # via django-stubs
 filelock==3.19.1
     # via virtualenv
 identify==2.6.15
@@ -53,9 +59,13 @@ sqlparse==0.5.3
     # via
     #   -r requirements.txt
     #   django
+types-pyyaml==6.0.12.20250915
+    # via django-stubs
 typing-extensions==4.15.0
     # via
     #   -r requirements.txt
+    #   django-stubs
+    #   django-stubs-ext
     #   pydantic
     #   pydantic-core
     #   pyright
