@@ -28,3 +28,7 @@ Use core/urls.py as the main file for importing django-ninja routers from across
 Create core/base_pydantic_models.py. Define BaseRequestModel and BaseResponseModel which extend the Pydantic base model. Include `model_config = ConfigDict(frozen=True, extra="forbid")`.
 
 Also create/default_success_response.py. Define DefaultSuccessResponse which extends BaseResponseModel and includes `success: bool = True`.
+
+### Transactions and Typed Responses
+
+Copy docs/setup/backend/typed_response_transaction_router.py to backend/core.

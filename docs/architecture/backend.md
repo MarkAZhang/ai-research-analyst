@@ -25,3 +25,5 @@ Here is an example layout for a particular module:
 We use django-ninja for routing. The main list of routes is found in core/urls.py, and routes for individual modules is found in the module's public/api.py file.
 
 For each route, the request and response objects should be Pydantic models, and should subclass (or be child classes of) BaseRequestModel and BaseResponseModel, which are defined in core/base_pydantic_models.py.
+
+Always use TypedResponseTransactionRouter as the router. This ensures requests are wrapped in a transaction by default, and also infers the response type from the function declaration (reducing boilerplate).
