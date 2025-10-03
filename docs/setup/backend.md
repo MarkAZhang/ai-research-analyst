@@ -17,6 +17,14 @@ Create a local superuser with username: admin and password: password, so
 I can access the Django admin panel.
 
 ### Pydantic and Pyright
-
 Install pydantic for data validation and serialization.
 Install pyright for type checking.
+
+### Django Ninja
+Install django-ninja.
+
+Use core/urls.py as the main file for importing django-ninja routers from across the application. django_project/urls.py should include core/urls.py at the path "/api".
+
+Create core/base_pydantic_models.py. Define BaseRequestModel and BaseResponseModel which extend the Pydantic base model. Include `model_config = ConfigDict(frozen=True, extra="forbid")`.
+
+Also create/default_success_response.py. Define DefaultSuccessResponse which extends BaseResponseModel and includes `success: bool = True`.
