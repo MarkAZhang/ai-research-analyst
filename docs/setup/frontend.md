@@ -1,6 +1,6 @@
 # Steps to set up an initial front-end
 
-Create a new directory named frontend in the root folder.
+Create a new directory named frontend in the root folder. The entire frontend should be in the frontend folder.
 
 ### NextJS
 Install NextJS inside the root folder. Note that node and nvm are already installed locally. Use Node 24.7.0. Please use a subdirectory named "src" inside of "frontend" as the root directory for the NextJS project.
