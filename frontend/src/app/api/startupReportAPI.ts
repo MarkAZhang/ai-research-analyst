@@ -1,11 +1,16 @@
 import BackendAPI from './BackendAPI'
+import { components } from './generated-api-schema'
+
+type GetStartupReportsResponse =
+  components['schemas']['GetStartupReportsResponse']
+type DefaultSuccessResponse = components['schemas']['DefaultSuccessResponse']
 
 const startupReportAPI = {
   /**
    * Fetch all available startup reports
    * @returns Promise with array of startup reports
    */
-  getStartupReports: () => {
+  getStartupReports: (): Promise<GetStartupReportsResponse> => {
     return BackendAPI.GET('/api/startup-report')
   },
 
@@ -14,7 +19,7 @@ const startupReportAPI = {
    * @param names - Array of company names to create reports for
    * @returns Promise with success response
    */
-  createStartupReports: (names: string[]) => {
+  createStartupReports: (names: string[]): Promise<DefaultSuccessResponse> => {
     return BackendAPI.POST('/api/startup-report/create', {
       body: { names },
       params: {}
