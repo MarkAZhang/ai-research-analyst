@@ -1,10 +1,15 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import startupReportAPI from '@/app/api/startupReportAPI'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
 import {
   Table,
   TableBody,
@@ -21,9 +26,8 @@ export default function StartupReportsPage(): React.JSX.Element {
   const [reports, setReports] = useState<StartupReport[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isCreating, setIsCreating] = useState<boolean>(false)
-  const [showDropdown, setShowDropdown] = useState<boolean>(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false)
   const [newReportsText, setNewReportsText] = useState<string>('')
-  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const fetchReports = async (): Promise<void> => {
     try {
@@ -42,26 +46,6 @@ export default function StartupReportsPage(): React.JSX.Element {
     fetchReports()
   }, [])
 
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent): void => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowDropdown(false)
-      }
-    }
-
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [showDropdown])
-
   const handleCreateReports = async (): Promise<void> => {
     const names: string[] = newReportsText
       .split('\n')
@@ -75,7 +59,7 @@ export default function StartupReportsPage(): React.JSX.Element {
 
     try {
       setIsCreating(true)
-      setShowDropdown(false)
+      setIsDropdownOpen(false)
       await startupReportAPI.createStartupReports(names)
       toast.success(`Successfully created ${names.length} report(s)`)
       setNewReportsText('')
@@ -92,22 +76,19 @@ export default function StartupReportsPage(): React.JSX.Element {
     <div className="container mx-auto py-8 max-w-[1200px]">
       <h1 className="text-3xl font-bold mb-6">Startup Reports</h1>
 
-      <div className="mb-4 relative" ref={dropdownRef}>
-        <Button
-          onClick={() => setShowDropdown(!showDropdown)}
-          disabled={isCreating}
-          className="gap-2"
-        >
-          {isCreating ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
-          Add New Reports
-        </Button>
-
-        {showDropdown && (
-          <div className="absolute top-full mt-2 w-96 bg-white border rounded-md shadow-lg p-4 z-10">
+      <div className="mb-4">
+        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button disabled={isCreating} className="gap-2">
+              {isCreating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+              Add New Reports
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-96 p-4" align="start">
             <textarea
               value={newReportsText}
               onChange={(e) => setNewReportsText(e.target.value)}
@@ -117,8 +98,8 @@ export default function StartupReportsPage(): React.JSX.Element {
             <Button onClick={handleCreateReports} className="w-full">
               Confirm
             </Button>
-          </div>
-        )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {isLoading ? (

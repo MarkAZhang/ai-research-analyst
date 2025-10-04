@@ -11,6 +11,7 @@
     "generate-schema": "openapi-typescript http://127.0.0.1:8081/api/openapi.json --output src/app/api/generated-api-schema.ts && eslint --fix **/generated-api-schema.ts"
   },
   "dependencies": {
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
