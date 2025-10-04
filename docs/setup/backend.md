@@ -5,6 +5,8 @@ Create a new directory named backend in the root folder. The entire backend shou
 ### pip-tools
 Install and use pip-tools when managing Python dependencies. Create a separate requirements.in and requirements.txt.
 
+Also include a separate requirements.dev.in file, also managed by pip-tools.
+
 ### Django
 Install Django.
 
@@ -17,8 +19,17 @@ Create a local superuser with username: admin and password: password, so
 I can access the Django admin panel.
 
 ### Pydantic and Pyright
-Install pydantic for data validation and serialization.
-Install pyright for type checking.
+Install pyright and pre-commit in requirements.dev.in.
+
+### Pre-commit hooks
+Install pre-commit in requirements.dev.in.
+Install django-stubs for Django type-checks. Add django_stubs_ext.monkeypatch() workaround to settings.py if needed.
+
+Configure the following pre-commit hooks to run on every commit:
+- pyright
+- front-end linting (npm run lint)
+- front-end type-checking (npm run type-check)
+
 
 ### Django Ninja
 Install django-ninja.

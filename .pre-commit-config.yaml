@@ -1,0 +1,23 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pyright
+        name: pyright
+        entry: bash -c 'cd backend && source .venv/bin/activate && pyright'
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: frontend-lint
+        name: frontend-lint
+        entry: bash -c 'cd frontend && source ~/.nvm/nvm.sh && nvm use 24.7.0 && npm run lint'
+        language: system
+        files: ^frontend/
+        pass_filenames: false
+
+      - id: frontend-type-check
+        name: frontend-type-check
+        entry: bash -c 'cd frontend && source ~/.nvm/nvm.sh && nvm use 24.7.0 && npm run type-check'
+        language: system
+        files: ^frontend/
+        pass_filenames: false

@@ -6,7 +6,7 @@ class StartupReportPrompt(models.Model):
     prompt = models.TextField()
 
     def __str__(self):
-        return f"Prompt {self.id} - {self.created_at}"
+        return f"Prompt {self.id} - {self.created_at}"  # type: ignore[reportAttributeAccessIssue]
 
 
 class StartupReport(models.Model):
