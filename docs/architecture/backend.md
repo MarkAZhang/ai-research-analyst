@@ -30,6 +30,8 @@ For each route, the request and response objects should be Pydantic models, and 
 
 Always use TypedResponseTransactionRouter as the router. This ensures requests are wrapped in a transaction by default, and also infers the response type from the function declaration (reducing boilerplate).
 
+Whenever you modify an API route on the backend, you need to re-generate the openapi schema on the front-end. Go to /frontend and run "npm run generate-schema".
+
 ### Testing
 
 We use pytest for testing. Tests are in backend/tests.
