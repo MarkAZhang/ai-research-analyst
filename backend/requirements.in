@@ -1,4 +1,5 @@
 django
 django-ninja
+django-cors-headers
 pydantic
 pyright
