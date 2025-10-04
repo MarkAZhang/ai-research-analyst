@@ -32,13 +32,19 @@ filelock==3.19.1
     # via virtualenv
 identify==2.6.15
     # via pre-commit
+iniconfig==2.1.0
+    # via pytest
 nodeenv==1.9.1
     # via
     #   -r requirements.txt
     #   pre-commit
     #   pyright
+packaging==25.0
+    # via pytest
 platformdirs==4.4.0
     # via virtualenv
+pluggy==1.6.0
+    # via pytest
 pre-commit==4.3.0
     # via -r requirements.dev.in
 pydantic==2.11.9
@@ -49,10 +55,18 @@ pydantic-core==2.33.2
     # via
     #   -r requirements.txt
     #   pydantic
+pygments==2.19.2
+    # via pytest
 pyright==1.1.406
     # via
     #   -r requirements.dev.in
     #   -r requirements.txt
+pytest==8.4.2
+    # via
+    #   -r requirements.dev.in
+    #   pytest-django
+pytest-django==4.11.1
+    # via -r requirements.dev.in
 pyyaml==6.0.3
     # via pre-commit
 sqlparse==0.5.3

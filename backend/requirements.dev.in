@@ -3,3 +3,5 @@
 pyright
 pre-commit
 django-stubs
+pytest
+pytest-django
