@@ -16,7 +16,7 @@ const BackendAPI = {
    *               Only paths with GET methods are allowed at compile time
    * @param options - Optional parameters (query, header, path, cookie)
    *                 Type is inferred from the schema for the given path
-   * @returns Promise resolving to the response data
+   * @returns Promise resolving to the typed response data from the schema
    * @throws Error if the API returns an error response
    */
   GET: async <P extends keyof paths & string>(
@@ -28,14 +28,22 @@ const BackendAPI = {
         ? paths[P]['get']['parameters']
         : never
       : never
-  ) => {
+  ): Promise<
+    paths[P] extends { get: any }
+      ? paths[P]['get'] extends {
+          responses: { 200: { content: { 'application/json': any } } }
+        }
+        ? paths[P]['get']['responses'][200]['content']['application/json']
+        : unknown
+      : never
+  > => {
     const response = await client.GET(path as any, options as any)
 
     if (response.error) {
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }
 
-    return response.data
+    return response.data as any
   },
 
   /**
@@ -48,7 +56,7 @@ const BackendAPI = {
    *                 - body: Request body typed from the schema
    *                 - params: Optional parameters (query, header, path, cookie)
    *                 Both are typed based on the schema for the given path
-   * @returns Promise resolving to the response data
+   * @returns Promise resolving to the typed response data from the schema
    * @throws Error if the API returns an error response
    */
   POST: async <P extends keyof paths & string>(
@@ -69,14 +77,22 @@ const BackendAPI = {
             ? { params: paths[P]['post']['parameters'] }
             : object)
       : never
-  ) => {
+  ): Promise<
+    paths[P] extends { post: any }
+      ? paths[P]['post'] extends {
+          responses: { 200: { content: { 'application/json': any } } }
+        }
+        ? paths[P]['post']['responses'][200]['content']['application/json']
+        : unknown
+      : never
+  > => {
     const response = await client.POST(path as any, options as any)
 
     if (response.error) {
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }
 
-    return response.data
+    return response.data as any
   }
 }
 
