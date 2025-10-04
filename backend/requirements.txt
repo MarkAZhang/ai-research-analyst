@@ -7,11 +7,16 @@
 annotated-types==0.7.0
     # via pydantic
 asgiref==3.9.2
-    # via django
+    # via
+    #   django
+    #   django-cors-headers
 django==5.2.7
     # via
     #   -r requirements.in
+    #   django-cors-headers
     #   django-ninja
+django-cors-headers==4.9.0
+    # via -r requirements.in
 django-ninja==1.4.3
     # via -r requirements.in
 nodeenv==1.9.1

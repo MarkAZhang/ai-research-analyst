@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import startupReportAPI from '@/app/api/startupReportAPI'
@@ -23,6 +23,7 @@ export default function StartupReportsPage(): React.JSX.Element {
   const [isCreating, setIsCreating] = useState<boolean>(false)
   const [showDropdown, setShowDropdown] = useState<boolean>(false)
   const [newReportsText, setNewReportsText] = useState<string>('')
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const fetchReports = async (): Promise<void> => {
     try {
@@ -40,6 +41,26 @@ export default function StartupReportsPage(): React.JSX.Element {
   useEffect(() => {
     fetchReports()
   }, [])
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false)
+      }
+    }
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showDropdown])
 
   const handleCreateReports = async (): Promise<void> => {
     const names: string[] = newReportsText
@@ -68,10 +89,10 @@ export default function StartupReportsPage(): React.JSX.Element {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 max-w-[1200px]">
       <h1 className="text-3xl font-bold mb-6">Startup Reports</h1>
 
-      <div className="mb-4 relative">
+      <div className="mb-4 relative" ref={dropdownRef}>
         <Button
           onClick={() => setShowDropdown(!showDropdown)}
           disabled={isCreating}
