@@ -32,6 +32,8 @@ Always use TypedResponseTransactionRouter as the router. This ensures requests a
 
 Whenever you modify an API route on the backend, you need to re-generate the openapi schema on the front-end. Go to /frontend and run "npm run generate-schema".
 
+Whenever you add or modify an API route, please thoroughly test it in the appropriate file or update the existing tests.
+
 ### Testing
 
 We use pytest for testing. Tests are in backend/tests.

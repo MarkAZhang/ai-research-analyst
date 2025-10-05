@@ -3,10 +3,21 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useRouter } from 'next/navigation'
 import StartupReportsPage from '../page'
+import { defer, DeferredPromise } from '@/app/testUtils'
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn()
+}))
+
+// Mock sonner toast
+const mockToastSuccess = jest.fn()
+const mockToastError = jest.fn()
+jest.mock('sonner', () => ({
+  toast: {
+    success: (message: string) => mockToastSuccess(message),
+    error: (message: string) => mockToastError(message)
+  }
 }))
 
 // Mock the API module
@@ -26,6 +37,15 @@ import startupReportAPI from '@/app/api/startupReportAPI'
 const mockStartupReportAPI = startupReportAPI as jest.Mocked<
   typeof startupReportAPI
 >
+
+// Toast verification utilities
+const expectSuccessToast = (message: string) => {
+  expect(mockToastSuccess).toHaveBeenCalledWith(message)
+}
+
+const expectErrorToast = (message: string) => {
+  expect(mockToastError).toHaveBeenCalledWith(message)
+}
 
 // Mock dayjs to make tests deterministic
 jest.mock('dayjs', () => {
@@ -71,6 +91,8 @@ global.confirm = mockConfirm
 describe('StartupReportsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockToastSuccess.mockClear()
+    mockToastError.mockClear()
     // Default API mocks
     mockStartupReportAPI.getStartupReports.mockResolvedValue({
       reports: sampleReports
@@ -89,16 +111,31 @@ describe('StartupReportsPage', () => {
 
   describe('Initial Loading', () => {
     it('should show loading spinner initially and then display reports', async () => {
+      // Use deferred promises to control when API calls resolve
+      const deferredGetReports = defer<{ reports: typeof sampleReports }>()
+      const deferredGetPrompt = defer<{ prompt: string }>()
+
+      mockStartupReportAPI.getStartupReports.mockReturnValue(
+        deferredGetReports.promise
+      )
+      mockStartupReportAPI.getCurrentPrompt.mockReturnValue(
+        deferredGetPrompt.promise
+      )
+
       render(<StartupReportsPage />)
 
-      // Loading spinner should be visible
+      // Loading spinner should be visible while waiting
       expect(
         screen.getByRole('heading', { name: /startup reports/i })
       ).toBeInTheDocument()
       const loader = document.querySelector('.animate-spin')
       expect(loader).toBeInTheDocument()
 
-      // Wait for reports to load
+      // Resolve the API calls
+      deferredGetReports.resolve({ reports: sampleReports })
+      deferredGetPrompt.resolve({ prompt: 'Default prompt text' })
+
+      // Wait for reports to load (when reports appear, loading is complete)
       await waitFor(() => {
         expect(screen.getByText('Acme Corp')).toBeInTheDocument()
         expect(screen.getByText('Beta Inc')).toBeInTheDocument()
@@ -134,7 +171,7 @@ describe('StartupReportsPage', () => {
   })
 
   describe('Creating Reports', () => {
-    it('should allow creating new reports', async () => {
+    it('should allow creating new reports and show success toast', async () => {
       const user = userEvent.setup()
       // Start with no reports
       mockStartupReportAPI.getStartupReports.mockResolvedValueOnce({
@@ -147,10 +184,16 @@ describe('StartupReportsPage', () => {
         expect(screen.getByText('No reports found')).toBeInTheDocument()
       })
 
-      // Set up for after creation
-      mockStartupReportAPI.getStartupReports.mockResolvedValueOnce({
-        reports: sampleReports
-      })
+      // Use deferred promise to control when creation completes
+      const deferredCreate = defer<{ success: boolean }>()
+      const deferredRefresh = defer<{ reports: typeof sampleReports }>()
+
+      mockStartupReportAPI.createStartupReports.mockReturnValue(
+        deferredCreate.promise
+      )
+      mockStartupReportAPI.getStartupReports.mockReturnValue(
+        deferredRefresh.promise
+      )
 
       // Open the create dropdown
       const createButton = screen.getByRole('button', {
@@ -168,6 +211,22 @@ describe('StartupReportsPage', () => {
       const confirmButton = screen.getByRole('button', { name: /confirm/i })
       await user.click(confirmButton)
 
+      // Verify button is disabled while creating
+      await waitFor(() => {
+        expect(createButton).toBeDisabled()
+      })
+
+      // Resolve the create request
+      deferredCreate.resolve({ success: true })
+
+      // Verify success toast is shown
+      await waitFor(() => {
+        expectSuccessToast('Successfully requested 2 report(s)')
+      })
+
+      // Resolve the refresh request
+      deferredRefresh.resolve({ reports: sampleReports })
+
       await waitFor(() => {
         expect(mockStartupReportAPI.createStartupReports).toHaveBeenCalledWith([
           'New Company',
@@ -175,9 +234,12 @@ describe('StartupReportsPage', () => {
         ])
         expect(screen.getByText('Acme Corp')).toBeInTheDocument()
       })
+
+      // Button should be enabled again
+      expect(createButton).toBeEnabled()
     })
 
-    it('should show error when creating reports with empty input', async () => {
+    it('should show error toast when creating reports with empty input', async () => {
       const user = userEvent.setup()
       render(<StartupReportsPage />)
 
@@ -197,15 +259,16 @@ describe('StartupReportsPage', () => {
       })
       await user.click(confirmButton)
 
-      // Should not make API call
+      // Should show error toast and not make API call
       await waitFor(() => {
+        expectErrorToast('Please enter at least one company name')
         expect(mockStartupReportAPI.createStartupReports).not.toHaveBeenCalled()
       })
     })
   })
 
   describe('Deleting Reports', () => {
-    it('should allow deleting selected reports', async () => {
+    it('should allow deleting selected reports and show success toast', async () => {
       mockConfirm.mockReturnValue(true)
 
       render(<StartupReportsPage />)
@@ -214,10 +277,16 @@ describe('StartupReportsPage', () => {
         expect(screen.getByText('Acme Corp')).toBeInTheDocument()
       })
 
-      // Set up response after delete
-      mockStartupReportAPI.getStartupReports.mockResolvedValueOnce({
-        reports: [sampleReports[1]]
-      })
+      // Use deferred promises to control when deletion completes
+      const deferredDelete = defer<{ success: boolean }>()
+      const deferredRefresh = defer<{ reports: typeof sampleReports }>()
+
+      mockStartupReportAPI.deleteStartupReports.mockReturnValue(
+        deferredDelete.promise
+      )
+      mockStartupReportAPI.getStartupReports.mockReturnValue(
+        deferredRefresh.promise
+      )
 
       // Select a report
       const checkboxes = screen.getAllByRole('checkbox')
@@ -236,6 +305,25 @@ describe('StartupReportsPage', () => {
       expect(mockConfirm).toHaveBeenCalledWith(
         'Are you sure you want to delete 1 report?'
       )
+
+      // Verify delete button and checkboxes are disabled while deleting
+      await waitFor(() => {
+        expect(deleteButton).toBeDisabled()
+        checkboxes.forEach((checkbox) => {
+          expect(checkbox).toBeDisabled()
+        })
+      })
+
+      // Resolve the delete request
+      deferredDelete.resolve({ success: true })
+
+      // Verify success toast is shown
+      await waitFor(() => {
+        expectSuccessToast('Successfully deleted 1 report')
+      })
+
+      // Resolve the refresh request with updated data
+      deferredRefresh.resolve({ reports: [sampleReports[1]] })
 
       await waitFor(() => {
         expect(mockStartupReportAPI.deleteStartupReports).toHaveBeenCalledWith([
@@ -279,39 +367,59 @@ describe('StartupReportsPage', () => {
   })
 
   describe('Refreshing Table', () => {
-    it('should refresh the table when refresh button is clicked', async () => {
+    it('should refresh the table and show success toast', async () => {
       render(<StartupReportsPage />)
 
       await waitFor(() => {
         expect(screen.getByText('Acme Corp')).toBeInTheDocument()
       })
 
+      // Use deferred promise to control when refresh completes
+      const deferredRefresh = defer<{ reports: typeof sampleReports }>()
+
+      mockStartupReportAPI.getStartupReports.mockReturnValue(
+        deferredRefresh.promise
+      )
+
       // Click refresh button
       const refreshButton = screen.getByRole('button', {
         name: /refresh table/i
       })
-      const initialCallCount =
-        mockStartupReportAPI.getStartupReports.mock.calls.length
-
       fireEvent.click(refreshButton)
 
-      // Should make additional API calls
+      // Verify button is disabled while refreshing
       await waitFor(() => {
-        expect(
-          mockStartupReportAPI.getStartupReports.mock.calls.length
-        ).toBeGreaterThan(initialCallCount)
+        expect(refreshButton).toBeDisabled()
+      })
+
+      // Resolve the refresh request
+      deferredRefresh.resolve({ reports: sampleReports })
+
+      // Verify success toast is shown
+      await waitFor(() => {
+        expectSuccessToast('Table refreshed successfully')
+      })
+
+      // Button should be enabled again
+      await waitFor(() => {
+        expect(refreshButton).toBeEnabled()
       })
     })
   })
 
   describe('Updating Prompt', () => {
-    it('should allow updating the report instructions', async () => {
+    it('should allow updating the report instructions and show success toast', async () => {
       const user = userEvent.setup()
       render(<StartupReportsPage />)
 
       await waitFor(() => {
         expect(screen.getByText('Acme Corp')).toBeInTheDocument()
       })
+
+      // Use deferred promise to control when update completes
+      const deferredUpdate = defer<{ success: boolean }>()
+
+      mockStartupReportAPI.updatePrompt.mockReturnValue(deferredUpdate.promise)
 
       // Open edit prompt dropdown
       const editButton = screen.getByRole('button', {
@@ -333,14 +441,29 @@ describe('StartupReportsPage', () => {
       const confirmButtons = screen.getAllByRole('button', { name: /confirm/i })
       await user.click(confirmButtons[confirmButtons.length - 1])
 
+      // Verify button is disabled while updating
+      await waitFor(() => {
+        expect(editButton).toBeDisabled()
+      })
+
+      // Resolve the update request
+      deferredUpdate.resolve({ success: true })
+
+      // Verify success toast is shown
       await waitFor(() => {
         expect(mockStartupReportAPI.updatePrompt).toHaveBeenCalledWith(
           'New prompt text'
         )
+        expectSuccessToast('Prompt updated successfully')
+      })
+
+      // Button should be enabled again
+      await waitFor(() => {
+        expect(editButton).toBeEnabled()
       })
     })
 
-    it('should show error when updating prompt with empty input', async () => {
+    it('should show error toast when updating prompt with empty input', async () => {
       const user = userEvent.setup()
       render(<StartupReportsPage />)
 
@@ -364,8 +487,9 @@ describe('StartupReportsPage', () => {
       const confirmButtons = screen.getAllByRole('button', { name: /confirm/i })
       await user.click(confirmButtons[confirmButtons.length - 1])
 
-      // Should not make API call
+      // Should show error toast and not make API call
       await waitFor(() => {
+        expectErrorToast('Please enter a prompt')
         expect(mockStartupReportAPI.updatePrompt).not.toHaveBeenCalled()
       })
     })
@@ -404,7 +528,7 @@ describe('StartupReportsPage', () => {
   })
 
   describe('Report Status Display', () => {
-    it('should display correct status pills for different statuses', async () => {
+    it('should display correct status pills associated with the right companies', async () => {
       const reportsWithDifferentStatuses = [
         { ...sampleReports[0], generation_status: 'pending' },
         {
@@ -440,11 +564,25 @@ describe('StartupReportsPage', () => {
         expect(screen.getByText('Epsilon Inc')).toBeInTheDocument()
       })
 
-      // Check for status labels
-      expect(screen.getByText('Pending')).toBeInTheDocument()
-      expect(screen.getByText('Processing')).toBeInTheDocument()
-      expect(screen.getByText('Completed')).toBeInTheDocument()
-      expect(screen.getByText('Failed')).toBeInTheDocument()
+      // Get all table rows (excluding header)
+      const rows = screen.getAllByRole('row').slice(1)
+
+      // Verify each row has the correct company name and status
+      // Row 0: Acme Corp - Pending
+      expect(rows[0]).toHaveTextContent('Acme Corp')
+      expect(rows[0]).toHaveTextContent('Pending')
+
+      // Row 1: Gamma LLC - Processing
+      expect(rows[1]).toHaveTextContent('Gamma LLC')
+      expect(rows[1]).toHaveTextContent('Processing')
+
+      // Row 2: Delta Corp - Completed
+      expect(rows[2]).toHaveTextContent('Delta Corp')
+      expect(rows[2]).toHaveTextContent('Completed')
+
+      // Row 3: Epsilon Inc - Failed
+      expect(rows[3]).toHaveTextContent('Epsilon Inc')
+      expect(rows[3]).toHaveTextContent('Failed')
     })
   })
 })
