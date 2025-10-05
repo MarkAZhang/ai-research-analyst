@@ -11,6 +11,7 @@ from core.startup_report.db.startup_report_db_mutators import (
 from core.startup_report.db.startup_report_db_queries import (
     get_all_startup_reports,
     get_most_recent_prompt,
+    get_startup_report_by_id,
 )
 from core.typed_response_transaction_router import TypedResponseTransactionRouter
 
@@ -24,6 +25,7 @@ class StartupReportResponse(BaseResponseModel):
     read_by_user: bool
     generation_status: str
     report_text: str
+    prompt_text: str | None
 
 
 class GetStartupReportsResponse(BaseResponseModel):
@@ -60,6 +62,7 @@ def get_startup_reports(request) -> GetStartupReportsResponse:
                 read_by_user=report.read_by_user,
                 generation_status=report.generation_status,
                 report_text=report.report_text,
+                prompt_text=report.prompt.prompt if report.prompt else None,
             )
             for report in reports
         ]
@@ -108,3 +111,22 @@ def get_current_prompt(request) -> GetCurrentPromptResponse:
     """
     prompt = get_most_recent_prompt()
     return GetCurrentPromptResponse(prompt=prompt.prompt if prompt else '')
+
+
+@router.get('/startup-report/{report_id}')
+def get_startup_report(request, report_id: int) -> StartupReportResponse:
+    """Fetch a single startup report by ID."""
+    report = get_startup_report_by_id(report_id)
+
+    if not report:
+        raise HttpError(404, 'Report not found')
+
+    return StartupReportResponse(
+        id=report.id,  # type: ignore[reportAttributeAccessIssue]
+        name=report.name,
+        created_at=report.created_at.isoformat(),
+        read_by_user=report.read_by_user,
+        generation_status=report.generation_status,
+        report_text=report.report_text,
+        prompt_text=report.prompt.prompt if report.prompt else None,
+    )

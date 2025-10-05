@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='StartupReport',
+            name='StartupReportDbModel',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255)),
@@ -21,13 +21,19 @@ class Migration(migrations.Migration):
                 ('generation_status', models.CharField(choices=[('pending', 'Pending'), ('started', 'Started'), ('failed', 'Failed'), ('completed', 'Completed')], default='pending', max_length=20)),
                 ('report_text', models.TextField(blank=True)),
             ],
+            options={
+                'db_table': 'core_startupreport',
+            },
         ),
         migrations.CreateModel(
-            name='StartupReportPrompt',
+            name='StartupReportPromptDbModel',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('prompt', models.TextField()),
             ],
+            options={
+                'db_table': 'core_startupreportprompt',
+            },
         ),
     ]

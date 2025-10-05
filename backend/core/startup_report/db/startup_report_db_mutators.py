@@ -6,12 +6,16 @@ from core.startup_report.db.startup_report_prompt_db_model import (
 
 def create_multiple_startup_reports(names: list[str]) -> list[StartupReportDbModel]:
     """Create multiple startup reports from a list of names using bulk_create."""
+    # Get the most recent prompt to link to the new reports
+    most_recent_prompt = StartupReportPromptDbModel.objects.order_by('-created_at').first()
+
     reports_to_create = [
         StartupReportDbModel(
             name=name,
             generation_status='pending',
             read_by_user=False,
             report_text='',
+            prompt=most_recent_prompt,
         )
         for name in names
     ]
