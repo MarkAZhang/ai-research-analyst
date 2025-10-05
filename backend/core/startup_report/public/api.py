@@ -5,9 +5,13 @@ from core.default_success_response import DefaultSuccessResponse
 from core.startup_report.db.startup_report_db_model import StartupReportDbModel
 from core.startup_report.db.startup_report_db_mutators import (
     create_multiple_startup_reports,
+    create_startup_report_prompt,
     delete_multiple_startup_reports,
 )
-from core.startup_report.db.startup_report_db_queries import get_all_startup_reports
+from core.startup_report.db.startup_report_db_queries import (
+    get_all_startup_reports,
+    get_most_recent_prompt,
+)
 from core.typed_response_transaction_router import TypedResponseTransactionRouter
 
 router = TypedResponseTransactionRouter()
@@ -32,6 +36,14 @@ class CreateStartupReportsRequest(BaseRequestModel):
 
 class DeleteStartupReportsRequest(BaseRequestModel):
     report_ids: list[int]
+
+
+class UpdatePromptRequest(BaseRequestModel):
+    prompt: str
+
+
+class GetCurrentPromptResponse(BaseResponseModel):
+    prompt: str
 
 
 @router.get('/startup-report')
@@ -76,3 +88,23 @@ def delete_startup_reports(
 
     delete_multiple_startup_reports(payload.report_ids)
     return DefaultSuccessResponse()
+
+
+@router.post('/startup-report/update-prompt')
+def update_prompt(request, payload: UpdatePromptRequest) -> DefaultSuccessResponse:
+    """Create a new startup report prompt, preserving history of previous prompts."""
+    if not payload.prompt or not payload.prompt.strip():
+        raise HttpError(400, 'Prompt cannot be empty')
+
+    create_startup_report_prompt(payload.prompt)
+    return DefaultSuccessResponse()
+
+
+@router.get('/startup-report/current-prompt')
+def get_current_prompt(request) -> GetCurrentPromptResponse:
+    """Fetch the most recent startup report prompt.
+
+    Returns an empty string if no prompt exists.
+    """
+    prompt = get_most_recent_prompt()
+    return GetCurrentPromptResponse(prompt=prompt.prompt if prompt else '')

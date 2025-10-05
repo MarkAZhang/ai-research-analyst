@@ -4,6 +4,8 @@ import { components } from './generated-api-schema'
 type GetStartupReportsResponse =
   components['schemas']['GetStartupReportsResponse']
 type DefaultSuccessResponse = components['schemas']['DefaultSuccessResponse']
+type GetCurrentPromptResponse =
+  components['schemas']['GetCurrentPromptResponse']
 
 const startupReportAPI = {
   /**
@@ -38,6 +40,26 @@ const startupReportAPI = {
       body: { report_ids: reportIds },
       params: {}
     })
+  },
+
+  /**
+   * Update the startup report prompt (creates a new prompt, preserving history)
+   * @param prompt - The new prompt text
+   * @returns Promise with success response
+   */
+  updatePrompt: (prompt: string): Promise<DefaultSuccessResponse> => {
+    return BackendAPI.POST('/api/startup-report/update-prompt', {
+      body: { prompt },
+      params: {}
+    })
+  },
+
+  /**
+   * Get the current (most recent) startup report prompt
+   * @returns Promise with the current prompt (empty string if none exists)
+   */
+  getCurrentPrompt: (): Promise<GetCurrentPromptResponse> => {
+    return BackendAPI.GET('/api/startup-report/current-prompt')
   }
 }
 

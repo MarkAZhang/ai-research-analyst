@@ -81,6 +81,48 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/startup-report/update-prompt': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Update Prompt
+     * @description Create a new startup report prompt, preserving history of previous prompts.
+     */
+    post: operations['core_startup_report_public_api_update_prompt']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/startup-report/current-prompt': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Current Prompt
+     * @description Fetch the most recent startup report prompt.
+     *
+     *     Returns an empty string if no prompt exists.
+     */
+    get: operations['core_startup_report_public_api_get_current_prompt']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -122,6 +164,16 @@ export interface components {
     DeleteStartupReportsRequest: {
       /** Report Ids */
       report_ids: number[]
+    }
+    /** UpdatePromptRequest */
+    UpdatePromptRequest: {
+      /** Prompt */
+      prompt: string
+    }
+    /** GetCurrentPromptResponse */
+    GetCurrentPromptResponse: {
+      /** Prompt */
+      prompt: string
     }
   }
   responses: never
@@ -214,6 +266,50 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DefaultSuccessResponse']
+        }
+      }
+    }
+  }
+  core_startup_report_public_api_update_prompt: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePromptRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DefaultSuccessResponse']
+        }
+      }
+    }
+  }
+  core_startup_report_public_api_get_current_prompt: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GetCurrentPromptResponse']
         }
       }
     }
