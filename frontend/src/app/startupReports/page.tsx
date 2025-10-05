@@ -156,7 +156,6 @@ export default function StartupReportsPage(): React.JSX.Element {
       setIsEditPromptOpen(false)
       await startupReportAPI.updatePrompt(promptText)
       toast.success('Prompt updated successfully')
-      setPromptText('')
     } catch (error) {
       toast.error('Failed to update prompt')
       console.error('Error updating prompt:', error)
@@ -195,18 +194,6 @@ export default function StartupReportsPage(): React.JSX.Element {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button
-            onClick={handleRefreshTable}
-            disabled={isRefreshing}
-            variant="outline"
-            className="gap-2"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-            />
-            Refresh Table
-          </Button>
-
           <DropdownMenu
             open={isEditPromptOpen}
             onOpenChange={setIsEditPromptOpen}
@@ -233,6 +220,18 @@ export default function StartupReportsPage(): React.JSX.Element {
               </Button>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Button
+            onClick={handleRefreshTable}
+            disabled={isRefreshing}
+            variant="outline"
+            className="gap-2"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+            />
+            Refresh Table
+          </Button>
         </div>
 
         {selectedReportIds.size > 0 && (
