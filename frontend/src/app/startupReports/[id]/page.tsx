@@ -87,18 +87,18 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
     <div className="container mx-auto py-8 max-w-[1200px]">
       <button
         onClick={handleBackClick}
-        className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4"
+        className="flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 mb-4"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Reports
       </button>
 
-      <h1 className="text-3xl font-bold mb-6">{report.name}</h1>
+      <h1 className="text-3xl font-bold">{report.name}</h1>
 
       <div className="mb-6">
         <button
           onClick={() => setShowPromptModal(true)}
-          className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+          className="flex items-center text-xs text-gray-500 hover:text-gray-900"
         >
           View Prompt
         </button>
@@ -110,7 +110,7 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
         </div>
       ) : (
         statusDisplay && (
-          <div className={`text-sm ${statusDisplay.color}`}>
+          <div className={`text-sm ${statusDisplay.color} italic`}>
             {statusDisplay.text}
           </div>
         )
@@ -118,7 +118,7 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
 
       {showPromptModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           onClick={() => setShowPromptModal(false)}
         >
           <div
