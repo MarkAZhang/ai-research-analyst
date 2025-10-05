@@ -84,7 +84,7 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
   const statusDisplay = getStatusDisplay()
 
   return (
-    <div className="container mx-auto py-8 max-w-[1200px]">
+    <div className="container mx-auto py-8 max-w-[1200px] px-[50px]">
       <button
         onClick={handleBackClick}
         className="flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 mb-4 cursor-pointer"
@@ -93,7 +93,7 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
         Back to Reports
       </button>
 
-      <h1 className="text-3xl font-bold">{report.name}</h1>
+      <h1 className="text-3xl font-bold mb-2">{report.name}</h1>
 
       <div className="mb-6">
         <button

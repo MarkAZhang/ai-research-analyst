@@ -167,14 +167,14 @@ export default function StartupReportsPage(): React.JSX.Element {
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-[1200px]">
+    <div className="container mx-auto py-8 max-w-[1200px] px-[50px]">
       <h1 className="text-3xl font-bold mb-6">Startup Reports</h1>
 
       <div className="mb-4 flex justify-between items-center">
         <div className="flex gap-2">
           <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
             <DropdownMenuTrigger asChild>
-              <Button disabled={isCreating} className="gap-2">
+              <Button disabled={isCreating} className="gap-2 cursor-pointer">
                 {isCreating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -190,7 +190,10 @@ export default function StartupReportsPage(): React.JSX.Element {
                 placeholder="Enter company names (one per line)"
                 className="w-full h-32 p-2 border rounded-md resize-none mb-2"
               />
-              <Button onClick={handleCreateReports} className="w-full">
+              <Button
+                onClick={handleCreateReports}
+                className="w-full cursor-pointer"
+              >
                 Confirm
               </Button>
             </DropdownMenuContent>
@@ -201,7 +204,10 @@ export default function StartupReportsPage(): React.JSX.Element {
             onOpenChange={setIsEditPromptOpen}
           >
             <DropdownMenuTrigger asChild>
-              <Button disabled={isUpdatingPrompt} className="gap-2">
+              <Button
+                disabled={isUpdatingPrompt}
+                className="gap-2 cursor-pointer"
+              >
                 {isUpdatingPrompt ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
@@ -217,7 +223,10 @@ export default function StartupReportsPage(): React.JSX.Element {
                 placeholder="Enter startup report instructions"
                 className="w-full h-64 p-2 border rounded-md resize-none mb-2"
               />
-              <Button onClick={handleUpdatePrompt} className="w-full">
+              <Button
+                onClick={handleUpdatePrompt}
+                className="w-full cursor-pointer"
+              >
                 Confirm
               </Button>
             </DropdownMenuContent>
@@ -227,7 +236,7 @@ export default function StartupReportsPage(): React.JSX.Element {
             onClick={handleRefreshTable}
             disabled={isRefreshing}
             variant="outline"
-            className="gap-2"
+            className="gap-2 cursor-pointer"
           >
             <RefreshCw
               className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
