@@ -21,3 +21,10 @@ repos:
         language: system
         files: ^frontend/
         pass_filenames: false
+
+      - id: frontend-test
+        name: frontend-test
+        entry: bash -c 'cd frontend && source ~/.nvm/nvm.sh && nvm use 24.7.0 && npm run test'
+        language: system
+        files: ^frontend/
+        pass_filenames: false
