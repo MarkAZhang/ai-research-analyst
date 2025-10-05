@@ -24,6 +24,20 @@ const startupReportAPI = {
       body: { names },
       params: {}
     })
+  },
+
+  /**
+   * Delete startup reports by their IDs
+   * @param reportIds - Array of report IDs to delete
+   * @returns Promise with success response
+   */
+  deleteStartupReports: (
+    reportIds: number[]
+  ): Promise<DefaultSuccessResponse> => {
+    return BackendAPI.POST('/api/startup-report/delete', {
+      body: { report_ids: reportIds },
+      params: {}
+    })
   }
 }
 

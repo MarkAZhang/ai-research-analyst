@@ -5,6 +5,7 @@ from core.default_success_response import DefaultSuccessResponse
 from core.startup_report.db.startup_report_db_model import StartupReportDbModel
 from core.startup_report.db.startup_report_db_mutators import (
     create_multiple_startup_reports,
+    delete_multiple_startup_reports,
 )
 from core.startup_report.db.startup_report_db_queries import get_all_startup_reports
 from core.typed_response_transaction_router import TypedResponseTransactionRouter
@@ -27,6 +28,10 @@ class GetStartupReportsResponse(BaseResponseModel):
 
 class CreateStartupReportsRequest(BaseRequestModel):
     names: list[str]
+
+
+class DeleteStartupReportsRequest(BaseRequestModel):
+    report_ids: list[int]
 
 
 @router.get('/startup-report')
@@ -58,4 +63,16 @@ def create_startup_reports(
         raise HttpError(400, 'Names list cannot be empty')
 
     create_multiple_startup_reports(payload.names)
+    return DefaultSuccessResponse()
+
+
+@router.post('/startup-report/delete')
+def delete_startup_reports(
+    request, payload: DeleteStartupReportsRequest
+) -> DefaultSuccessResponse:
+    """Delete startup reports for each ID in the provided list."""
+    if not payload.report_ids:
+        raise HttpError(400, 'Report IDs list cannot be empty')
+
+    delete_multiple_startup_reports(payload.report_ids)
     return DefaultSuccessResponse()
