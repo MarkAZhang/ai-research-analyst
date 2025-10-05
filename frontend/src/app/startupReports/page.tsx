@@ -33,6 +33,10 @@ export default function StartupReportsPage(): React.JSX.Element {
   const [isCreating, setIsCreating] = useState<boolean>(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false)
   const [newReportsText, setNewReportsText] = useState<string>('')
+  const [selectedReportIds, setSelectedReportIds] = useState<Set<number>>(
+    new Set()
+  )
+  const [isDeleting, setIsDeleting] = useState<boolean>(false)
 
   const fetchReports = async (): Promise<void> => {
     try {
@@ -77,11 +81,47 @@ export default function StartupReportsPage(): React.JSX.Element {
     }
   }
 
+  const handleDeleteReports = async (): Promise<void> => {
+    const count = selectedReportIds.size
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${count} report${count > 1 ? 's' : ''}?`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      setIsDeleting(true)
+      await startupReportAPI.deleteStartupReports(Array.from(selectedReportIds))
+      toast.success(
+        `Successfully deleted ${count} report${count > 1 ? 's' : ''}`
+      )
+      setSelectedReportIds(new Set())
+      await fetchReports()
+    } catch (error) {
+      toast.error('Failed to delete reports')
+      console.error('Error deleting reports:', error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const toggleReportSelection = (reportId: number): void => {
+    const newSelection = new Set(selectedReportIds)
+    if (newSelection.has(reportId)) {
+      newSelection.delete(reportId)
+    } else {
+      newSelection.add(reportId)
+    }
+    setSelectedReportIds(newSelection)
+  }
+
   return (
     <div className="container mx-auto py-8 max-w-[1200px]">
       <h1 className="text-3xl font-bold mb-6">Startup Reports</h1>
 
-      <div className="mb-4">
+      <div className="mb-4 flex justify-between items-center">
         <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <Button disabled={isCreating} className="gap-2">
@@ -105,6 +145,18 @@ export default function StartupReportsPage(): React.JSX.Element {
             </Button>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {selectedReportIds.size > 0 && (
+          <Button
+            onClick={handleDeleteReports}
+            disabled={isDeleting}
+            variant="destructive"
+            className="gap-2"
+          >
+            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            Delete Reports
+          </Button>
+        )}
       </div>
 
       {isLoading ? (
@@ -115,6 +167,7 @@ export default function StartupReportsPage(): React.JSX.Element {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12"></TableHead>
               <TableHead>Startup Name</TableHead>
               <TableHead>Requested At</TableHead>
               <TableHead>Status</TableHead>
@@ -123,7 +176,7 @@ export default function StartupReportsPage(): React.JSX.Element {
           <TableBody>
             {reports.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-gray-500">
+                <TableCell colSpan={4} className="text-center text-gray-500">
                   No reports found
                 </TableCell>
               </TableRow>
@@ -147,6 +200,15 @@ export default function StartupReportsPage(): React.JSX.Element {
 
                 return (
                   <TableRow key={report.id}>
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selectedReportIds.has(report.id)}
+                        onChange={() => toggleReportSelection(report.id)}
+                        disabled={isDeleting}
+                        className="cursor-pointer"
+                      />
+                    </TableCell>
                     <TableCell className="font-bold">{report.name}</TableCell>
                     <TableCell className="text-sm text-gray-500">
                       {dayjs(report.created_at).fromNow()}

@@ -61,6 +61,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/startup-report/delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Delete Startup Reports
+     * @description Delete startup reports for each ID in the provided list.
+     */
+    post: operations['core_startup_report_public_api_delete_startup_reports']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -97,6 +117,11 @@ export interface components {
     CreateStartupReportsRequest: {
       /** Names */
       names: string[]
+    }
+    /** DeleteStartupReportsRequest */
+    DeleteStartupReportsRequest: {
+      /** Report Ids */
+      report_ids: number[]
     }
   }
   responses: never
@@ -155,6 +180,30 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['CreateStartupReportsRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DefaultSuccessResponse']
+        }
+      }
+    }
+  }
+  core_startup_report_public_api_delete_startup_reports: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeleteStartupReportsRequest']
       }
     }
     responses: {

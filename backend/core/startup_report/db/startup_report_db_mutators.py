@@ -13,3 +13,12 @@ def create_multiple_startup_reports(names: list[str]) -> list[StartupReportDbMod
         for name in names
     ]
     return list(StartupReportDbModel.objects.bulk_create(reports_to_create))
+
+
+def delete_multiple_startup_reports(report_ids: list[int]) -> int:
+    """Delete multiple startup reports by their IDs.
+
+    Returns the number of reports deleted.
+    """
+    deleted_count, _ = StartupReportDbModel.objects.filter(id__in=report_ids).delete()
+    return deleted_count
