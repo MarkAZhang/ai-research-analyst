@@ -3,13 +3,15 @@
 import { useState, useEffect } from 'react'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import startupReportAPI from '@/app/api/startupReportAPI'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/lib/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
+} from '@/components/lib/dropdown-menu'
 import {
   Table,
   TableBody,
@@ -17,8 +19,11 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from '@/components/ui/table'
+} from '@/components/lib/table'
+import { StatusPill } from '@/components/StatusPill'
 import { components } from '@/app/api/generated-api-schema'
+
+dayjs.extend(relativeTime)
 
 type StartupReport = components['schemas']['StartupReportResponse']
 
@@ -61,7 +66,7 @@ export default function StartupReportsPage(): React.JSX.Element {
       setIsCreating(true)
       setIsDropdownOpen(false)
       await startupReportAPI.createStartupReports(names)
-      toast.success(`Successfully created ${names.length} report(s)`)
+      toast.success(`Successfully requested ${names.length} report(s)`)
       setNewReportsText('')
       await fetchReports()
     } catch (error) {
@@ -85,7 +90,7 @@ export default function StartupReportsPage(): React.JSX.Element {
               ) : (
                 <ChevronDown className="h-4 w-4" />
               )}
-              Add New Reports
+              Request New Reports
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-96 p-4" align="start">
@@ -110,9 +115,9 @@ export default function StartupReportsPage(): React.JSX.Element {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead>Generation Status</TableHead>
+              <TableHead>Startup Name</TableHead>
+              <TableHead>Requested At</TableHead>
+              <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -123,15 +128,38 @@ export default function StartupReportsPage(): React.JSX.Element {
                 </TableCell>
               </TableRow>
             ) : (
-              reports.map((report) => (
-                <TableRow key={report.id}>
-                  <TableCell>{report.name}</TableCell>
-                  <TableCell>
-                    {new Date(report.created_at).toLocaleString()}
-                  </TableCell>
-                  <TableCell>{report.generation_status}</TableCell>
-                </TableRow>
-              ))
+              reports.map((report) => {
+                const statusStateMap: Record<
+                  string,
+                  'initializing' | 'processing' | 'succeeded' | 'failed'
+                > = {
+                  pending: 'initializing',
+                  started: 'processing',
+                  completed: 'succeeded',
+                  failed: 'failed'
+                }
+                const statusLabelMap: Record<string, string> = {
+                  pending: 'Pending',
+                  started: 'Processing',
+                  completed: 'Completed',
+                  failed: 'Failed'
+                }
+
+                return (
+                  <TableRow key={report.id}>
+                    <TableCell className="font-bold">{report.name}</TableCell>
+                    <TableCell className="text-sm text-gray-500">
+                      {dayjs(report.created_at).fromNow()}
+                    </TableCell>
+                    <TableCell>
+                      <StatusPill
+                        state={statusStateMap[report.generation_status]}
+                        label={statusLabelMap[report.generation_status]}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             )}
           </TableBody>
         </Table>
