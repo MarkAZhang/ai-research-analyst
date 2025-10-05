@@ -2,27 +2,18 @@
 Airflow DAG for processing startup reports with ETL pipeline.
 
 This DAG performs the following steps:
-1. Extract: Fetch the StartupReportDbModel's name and prompt text
+1. Extract: Fetch the StartupReport's name and prompt text from SQLite database
 2. Transform: Replace {{name}} placeholders in the prompt with the actual name
 3. Load: Update the report with the final text and set status to completed/failed
 """
 import os
-import sys
 from datetime import datetime
 
-import django
 from airflow.sdk import dag, task, Param
 
-# Add the backend directory to the Python path for Django imports
+# Database path - relative to backend directory
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, backend_dir)
-
-# Configure Django settings
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_project.settings')
-django.setup()
-
-# Import Django models after setup
-from core.startup_report.db.startup_report_db_model import StartupReportDbModel
+DB_PATH = os.path.join(backend_dir, 'dev.sqlite3')
 
 
 @dag(
@@ -44,7 +35,7 @@ def startup_report_etl_dag():
 
     @task()
     def extract(report_id: int) -> dict:
-        """Extract: Fetch the StartupReportDbModel's name and prompt text.
+        """Extract: Fetch the StartupReport's name and prompt text from database.
 
         Args:
             report_id: ID of the report to process
@@ -52,19 +43,37 @@ def startup_report_etl_dag():
         Returns:
             Dictionary containing report_id, name, and prompt_text
         """
-        try:
-            report = StartupReportDbModel.objects.select_related('prompt').get(id=report_id)
+        import sqlite3
 
-            if not report.prompt:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        try:
+            # Fetch report with its associated prompt
+            cursor.execute("""
+                SELECT r.name, p.prompt
+                FROM core_startupreport r
+                LEFT JOIN core_startupreportprompt p ON r.prompt_id = p.id
+                WHERE r.id = ?
+            """, (report_id,))
+
+            result = cursor.fetchone()
+
+            if not result:
+                raise ValueError(f"Report with ID {report_id} does not exist")
+
+            name, prompt_text = result
+
+            if not prompt_text:
                 raise ValueError(f"Report {report_id} has no associated prompt")
 
             return {
                 'report_id': report_id,
-                'name': report.name,
-                'prompt_text': report.prompt.prompt,
+                'name': name,
+                'prompt_text': prompt_text,
             }
-        except StartupReportDbModel.DoesNotExist:
-            raise ValueError(f"Report with ID {report_id} does not exist")
+        finally:
+            conn.close()
 
     @task()
     def transform(extracted_data: dict) -> dict:
@@ -94,13 +103,24 @@ def startup_report_etl_dag():
         Args:
             transformed_data: Dictionary from transform step containing final_text
         """
+        import sqlite3
+
         report_id = transformed_data['report_id']
         final_text = transformed_data['final_text']
 
-        report = StartupReportDbModel.objects.get(id=report_id)
-        report.report_text = final_text
-        report.generation_status = 'completed'
-        report.save()
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("""
+                UPDATE core_startupreport
+                SET report_text = ?, generation_status = 'completed'
+                WHERE id = ?
+            """, (final_text, report_id))
+
+            conn.commit()
+        finally:
+            conn.close()
 
     @task(trigger_rule='one_failed')
     def handle_failure(**context) -> None:
@@ -108,14 +128,25 @@ def startup_report_etl_dag():
 
         This task only runs when upstream tasks fail.
         """
+        import sqlite3
+
         report_id = context['params']['report_id']
 
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+
         try:
-            report = StartupReportDbModel.objects.get(id=report_id)
-            report.generation_status = 'failed'
-            report.save()
+            cursor.execute("""
+                UPDATE core_startupreport
+                SET generation_status = 'failed'
+                WHERE id = ?
+            """, (report_id,))
+
+            conn.commit()
         except Exception as e:
             print(f"Error setting failure status for report {report_id}: {e}")
+        finally:
+            conn.close()
 
     # Get report_id from params (templated value)
     report_id = "{{ params.report_id }}"  # type: ignore[reportArgumentType]

@@ -39,14 +39,9 @@ class AirflowClient:
             if conf:
                 cmd.extend(["--conf", json.dumps(conf)])
 
-            # Set environment with AIRFLOW_HOME and PYTHONPATH
+            # Set environment with AIRFLOW_HOME
             env = os.environ.copy()
             env["AIRFLOW_HOME"] = self.airflow_home
-
-            # Add backend directory to PYTHONPATH for Django imports
-            backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            current_pythonpath = env.get("PYTHONPATH", "")
-            env["PYTHONPATH"] = f"{backend_dir}:{current_pythonpath}" if current_pythonpath else backend_dir
 
             # Execute the command
             result = subprocess.run(

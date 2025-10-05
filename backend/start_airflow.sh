@@ -6,9 +6,6 @@ export AIRFLOW_HOME=~/airflow
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Add backend directory to PYTHONPATH so DAGs can import Django modules
-export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
-
 # Create symlink for DAGs folder if it doesn't exist
 if [ ! -L "$AIRFLOW_HOME/dags" ]; then
     ln -sfn "$SCRIPT_DIR/dags" "$AIRFLOW_HOME/dags"

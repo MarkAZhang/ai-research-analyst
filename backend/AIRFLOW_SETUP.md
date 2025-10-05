@@ -23,7 +23,7 @@ airflow db migrate
 
 ### Running Airflow
 
-**Important**: Always use the provided script to start Airflow, as it sets up the necessary environment variables:
+To start Airflow in standalone mode:
 
 ```bash
 ./start_airflow.sh
@@ -31,11 +31,8 @@ airflow db migrate
 
 The script will:
 - Set AIRFLOW_HOME to ~/airflow
-- Add the backend directory to PYTHONPATH (for Django imports)
 - Create a symlink from ~/airflow/dags to backend/dags
-- Start Airflow in standalone mode
-
-**Note**: If Airflow is already running, you must restart it using this script for DAGs to load correctly.
+- Start Airflow in standalone mode (webserver, scheduler, and creates admin user)
 
 ### Accessing the Airflow UI
 
@@ -54,10 +51,10 @@ Once Airflow is running, you can access the web UI at:
 ### How It Works
 
 1. **DAG Location**: DAGs are stored in `backend/dags/`
-2. **Django Access**: DAGs can import and use Django models by:
-   - Adding the backend directory to Python path
-   - Configuring Django settings
-   - Importing models after `django.setup()`
+2. **Database Access**: DAGs access the Django database directly using SQLite connections
+   - Database path: `backend/dev.sqlite3`
+   - Uses raw SQL queries via `sqlite3` module
+   - No Django ORM dependencies in DAGs
 
 3. **Triggering DAGs from Django**:
    - Use the `AirflowClient` in `core/airflow_client.py`
@@ -79,23 +76,26 @@ This DAG is automatically triggered when new startup reports are created via the
 
 Place your DAG files in the `backend/dags/` directory. Airflow will automatically detect and load them.
 
-To access Django models in your DAG:
+To access the Django database in your DAG:
 ```python
 import os
-import sys
-import django
+import sqlite3
 
-# Add backend directory to path
+# Get database path
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, backend_dir)
+DB_PATH = os.path.join(backend_dir, 'dev.sqlite3')
 
-# Configure Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_project.settings')
-django.setup()
+# Use SQLite connection
+conn = sqlite3.connect(DB_PATH)
+cursor = conn.cursor()
 
-# Now import Django models
-from core.startup_report.db.startup_report_db_model import StartupReportDbModel
+cursor.execute("SELECT * FROM core_startupreport WHERE id = ?", (report_id,))
+result = cursor.fetchone()
+
+conn.close()
 ```
+
+**Note**: DAGs use direct SQLite connections instead of Django ORM to avoid import dependencies and simplify the setup.
 
 ### Stopping Airflow
 
