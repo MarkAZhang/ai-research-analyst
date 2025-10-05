@@ -26,7 +26,7 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
         const response = await startupReportAPI.getStartupReport(reportId)
         setReport(response)
       } catch (error) {
-        toast.error('Failed to load report')
+        // Error toast is shown by BackendAPI
         console.error('Error fetching report:', error)
       } finally {
         setIsLoading(false)

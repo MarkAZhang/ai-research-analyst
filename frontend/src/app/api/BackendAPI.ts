@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import createClient from 'openapi-fetch'
+import { toast } from 'sonner'
 import type { paths } from './generated-api-schema'
 
 // Create a typed client using the auto-generated OpenAPI schema
@@ -42,6 +43,11 @@ const BackendAPI = {
     const response = await client.GET(path as any, fetchOptions as any)
 
     if (response.error) {
+      const errorMessage =
+        (response.error as any)?.detail ||
+        (response.error as any)?.message ||
+        'An error occurred'
+      toast.error(errorMessage)
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }
 
@@ -91,6 +97,11 @@ const BackendAPI = {
     const response = await client.POST(path as any, options as any)
 
     if (response.error) {
+      const errorMessage =
+        (response.error as any)?.detail ||
+        (response.error as any)?.message ||
+        'An error occurred'
+      toast.error(errorMessage)
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
     }
 

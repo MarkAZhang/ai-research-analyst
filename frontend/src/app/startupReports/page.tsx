@@ -50,7 +50,7 @@ export default function StartupReportsPage(): React.JSX.Element {
       const response = await startupReportAPI.getStartupReports()
       setReports(response.reports)
     } catch (error) {
-      toast.error('Failed to load startup reports')
+      // Error toast is shown by BackendAPI
       console.error('Error fetching reports:', error)
     } finally {
       setIsLoading(false)
@@ -91,7 +91,7 @@ export default function StartupReportsPage(): React.JSX.Element {
       setNewReportsText('')
       await fetchReports()
     } catch (error) {
-      toast.error('Failed to create reports')
+      // Error toast is shown by BackendAPI
       console.error('Error creating reports:', error)
     } finally {
       setIsCreating(false)
@@ -117,7 +117,7 @@ export default function StartupReportsPage(): React.JSX.Element {
       setSelectedReportIds(new Set())
       await fetchReports()
     } catch (error) {
-      toast.error('Failed to delete reports')
+      // Error toast is shown by BackendAPI
       console.error('Error deleting reports:', error)
     } finally {
       setIsDeleting(false)
@@ -140,7 +140,7 @@ export default function StartupReportsPage(): React.JSX.Element {
       await fetchReports()
       toast.success('Table refreshed successfully')
     } catch (error) {
-      toast.error('Failed to refresh table')
+      // Error toast is shown by BackendAPI
       console.error('Error refreshing table:', error)
     } finally {
       setIsRefreshing(false)
@@ -159,7 +159,7 @@ export default function StartupReportsPage(): React.JSX.Element {
       await startupReportAPI.updatePrompt(promptText)
       toast.success('Prompt updated successfully')
     } catch (error) {
-      toast.error('Failed to update prompt')
+      // Error toast is shown by BackendAPI
       console.error('Error updating prompt:', error)
     } finally {
       setIsUpdatingPrompt(false)
