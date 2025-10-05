@@ -81,6 +81,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/startup-report/update-prompt': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Update Prompt
+     * @description Create a new startup report prompt, preserving history of previous prompts.
+     */
+    post: operations['core_startup_report_public_api_update_prompt']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -122,6 +142,11 @@ export interface components {
     DeleteStartupReportsRequest: {
       /** Report Ids */
       report_ids: number[]
+    }
+    /** UpdatePromptRequest */
+    UpdatePromptRequest: {
+      /** Prompt */
+      prompt: string
     }
   }
   responses: never
@@ -204,6 +229,30 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['DeleteStartupReportsRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DefaultSuccessResponse']
+        }
+      }
+    }
+  }
+  core_startup_report_public_api_update_prompt: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePromptRequest']
       }
     }
     responses: {

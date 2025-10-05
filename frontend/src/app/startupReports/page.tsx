@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronDown, Loader2 } from 'lucide-react'
+import { ChevronDown, Loader2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -37,6 +37,10 @@ export default function StartupReportsPage(): React.JSX.Element {
     new Set()
   )
   const [isDeleting, setIsDeleting] = useState<boolean>(false)
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false)
+  const [isEditPromptOpen, setIsEditPromptOpen] = useState<boolean>(false)
+  const [promptText, setPromptText] = useState<string>('')
+  const [isUpdatingPrompt, setIsUpdatingPrompt] = useState<boolean>(false)
 
   const fetchReports = async (): Promise<void> => {
     try {
@@ -117,34 +121,108 @@ export default function StartupReportsPage(): React.JSX.Element {
     setSelectedReportIds(newSelection)
   }
 
+  const handleRefreshTable = async (): Promise<void> => {
+    try {
+      setIsRefreshing(true)
+      await fetchReports()
+      toast.success('Table refreshed successfully')
+    } catch (error) {
+      toast.error('Failed to refresh table')
+      console.error('Error refreshing table:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  const handleUpdatePrompt = async (): Promise<void> => {
+    if (!promptText.trim()) {
+      toast.error('Please enter a prompt')
+      return
+    }
+
+    try {
+      setIsUpdatingPrompt(true)
+      setIsEditPromptOpen(false)
+      await startupReportAPI.updatePrompt(promptText)
+      toast.success('Prompt updated successfully')
+      setPromptText('')
+    } catch (error) {
+      toast.error('Failed to update prompt')
+      console.error('Error updating prompt:', error)
+    } finally {
+      setIsUpdatingPrompt(false)
+    }
+  }
+
   return (
     <div className="container mx-auto py-8 max-w-[1200px]">
       <h1 className="text-3xl font-bold mb-6">Startup Reports</h1>
 
       <div className="mb-4 flex justify-between items-center">
-        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-          <DropdownMenuTrigger asChild>
-            <Button disabled={isCreating} className="gap-2">
-              {isCreating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-              Request New Reports
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-96 p-4" align="start">
-            <textarea
-              value={newReportsText}
-              onChange={(e) => setNewReportsText(e.target.value)}
-              placeholder="Enter company names (one per line)"
-              className="w-full h-32 p-2 border rounded-md resize-none mb-2"
+        <div className="flex gap-2">
+          <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button disabled={isCreating} className="gap-2">
+                {isCreating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+                Request New Reports
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-96 p-4" align="start">
+              <textarea
+                value={newReportsText}
+                onChange={(e) => setNewReportsText(e.target.value)}
+                placeholder="Enter company names (one per line)"
+                className="w-full h-32 p-2 border rounded-md resize-none mb-2"
+              />
+              <Button onClick={handleCreateReports} className="w-full">
+                Confirm
+              </Button>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button
+            onClick={handleRefreshTable}
+            disabled={isRefreshing}
+            variant="outline"
+            className="gap-2"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
             />
-            <Button onClick={handleCreateReports} className="w-full">
-              Confirm
-            </Button>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            Refresh Table
+          </Button>
+
+          <DropdownMenu
+            open={isEditPromptOpen}
+            onOpenChange={setIsEditPromptOpen}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button disabled={isUpdatingPrompt} className="gap-2">
+                {isUpdatingPrompt ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+                Edit Prompt
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[768px] p-4" align="start">
+              <textarea
+                value={promptText}
+                onChange={(e) => setPromptText(e.target.value)}
+                placeholder="Enter startup report prompt"
+                className="w-full h-64 p-2 border rounded-md resize-none mb-2"
+              />
+              <Button onClick={handleUpdatePrompt} className="w-full">
+                Confirm
+              </Button>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         {selectedReportIds.size > 0 && (
           <Button

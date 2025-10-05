@@ -38,6 +38,18 @@ const startupReportAPI = {
       body: { report_ids: reportIds },
       params: {}
     })
+  },
+
+  /**
+   * Update the startup report prompt (creates a new prompt, preserving history)
+   * @param prompt - The new prompt text
+   * @returns Promise with success response
+   */
+  updatePrompt: (prompt: string): Promise<DefaultSuccessResponse> => {
+    return BackendAPI.POST('/api/startup-report/update-prompt', {
+      body: { prompt },
+      params: {}
+    })
   }
 }
 
