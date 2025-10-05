@@ -8,7 +8,10 @@ from core.startup_report.db.startup_report_db_mutators import (
     create_startup_report_prompt,
     delete_multiple_startup_reports,
 )
-from core.startup_report.db.startup_report_db_queries import get_all_startup_reports
+from core.startup_report.db.startup_report_db_queries import (
+    get_all_startup_reports,
+    get_most_recent_prompt,
+)
 from core.typed_response_transaction_router import TypedResponseTransactionRouter
 
 router = TypedResponseTransactionRouter()
@@ -36,6 +39,10 @@ class DeleteStartupReportsRequest(BaseRequestModel):
 
 
 class UpdatePromptRequest(BaseRequestModel):
+    prompt: str
+
+
+class GetCurrentPromptResponse(BaseResponseModel):
     prompt: str
 
 
@@ -91,3 +98,13 @@ def update_prompt(request, payload: UpdatePromptRequest) -> DefaultSuccessRespon
 
     create_startup_report_prompt(payload.prompt)
     return DefaultSuccessResponse()
+
+
+@router.get('/startup-report/current-prompt')
+def get_current_prompt(request) -> GetCurrentPromptResponse:
+    """Fetch the most recent startup report prompt.
+
+    Returns an empty string if no prompt exists.
+    """
+    prompt = get_most_recent_prompt()
+    return GetCurrentPromptResponse(prompt=prompt.prompt if prompt else '')

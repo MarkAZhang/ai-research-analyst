@@ -55,8 +55,19 @@ export default function StartupReportsPage(): React.JSX.Element {
     }
   }
 
+  const fetchCurrentPrompt = async (): Promise<void> => {
+    try {
+      const response = await startupReportAPI.getCurrentPrompt()
+      setPromptText(response.prompt)
+    } catch (error) {
+      console.error('Error fetching current prompt:', error)
+      // Don't show error toast for this, just silently fail
+    }
+  }
+
   useEffect(() => {
     fetchReports()
+    fetchCurrentPrompt()
   }, [])
 
   const handleCreateReports = async (): Promise<void> => {
@@ -207,14 +218,14 @@ export default function StartupReportsPage(): React.JSX.Element {
                 ) : (
                   <ChevronDown className="h-4 w-4" />
                 )}
-                Edit Prompt
+                Edit Report Instructions
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-[768px] p-4" align="start">
               <textarea
                 value={promptText}
                 onChange={(e) => setPromptText(e.target.value)}
-                placeholder="Enter startup report prompt"
+                placeholder="Enter startup report instructions"
                 className="w-full h-64 p-2 border rounded-md resize-none mb-2"
               />
               <Button onClick={handleUpdatePrompt} className="w-full">
