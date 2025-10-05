@@ -11,8 +11,7 @@ import sys
 from datetime import datetime
 
 import django
-from airflow.decorators import dag, task  # type: ignore[reportAttributeAccessIssue]
-from airflow.models.param import Param  # type: ignore[reportMissingImports]
+from airflow.sdk import dag, task, Param
 
 # Add the backend directory to the Python path for Django imports
 backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -123,8 +122,8 @@ def startup_report_etl_dag():
 
     # Define the ETL pipeline flow
     extracted_data = extract(report_id)  # type: ignore[reportArgumentType]
-    transformed_data = transform(extracted_data)
-    load_task = load(transformed_data)
+    transformed_data = transform(extracted_data)  # type: ignore[reportArgumentType]
+    load_task = load(transformed_data)  # type: ignore[reportArgumentType]
     failure_task = handle_failure()
 
     # Set up dependencies: failure handler runs if extract, transform, or load fails

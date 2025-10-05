@@ -1,50 +1,72 @@
 """Utility module for triggering Airflow DAGs from Django."""
-import requests
+import json
+import os
+import subprocess
 from typing import Any
 
 
 class AirflowClient:
-    """Client for interacting with Airflow API."""
+    """Client for interacting with Airflow via CLI."""
 
-    def __init__(self, base_url: str = "http://localhost:8080", username: str = "admin", password: str = "admin"):
+    def __init__(self, airflow_home: str = "~/airflow"):
         """Initialize the Airflow client.
 
         Args:
-            base_url: Base URL of the Airflow webserver
-            username: Airflow username for authentication
-            password: Airflow password for authentication
+            airflow_home: Path to Airflow home directory
         """
-        self.base_url = base_url
-        self.auth = (username, password)
+        self.airflow_home = os.path.expanduser(airflow_home)
 
-    def trigger_dag(self, dag_id: str, conf: dict[str, Any] | None = None) -> dict[str, Any] | None:
-        """Trigger an Airflow DAG run.
+    def trigger_dag(self, dag_id: str, conf: dict[str, Any] | None = None) -> bool:
+        """Trigger an Airflow DAG run using the Airflow CLI.
 
         Args:
             dag_id: ID of the DAG to trigger
             conf: Configuration parameters to pass to the DAG
 
         Returns:
-            Response from the Airflow API, or None if failed
+            True if successful, False otherwise
         """
-        url = f"{self.base_url}/api/v1/dags/{dag_id}/dagRuns"
-
-        payload = {
-            "conf": conf or {},
-        }
-
         try:
-            response = requests.post(
-                url,
-                json=payload,
-                auth=self.auth,
-                headers={"Content-Type": "application/json"},
+            # Build the command
+            cmd = [
+                "airflow",
+                "dags",
+                "trigger",
+                dag_id,
+            ]
+
+            # Add conf parameter if provided
+            if conf:
+                cmd.extend(["--conf", json.dumps(conf)])
+
+            # Set environment with AIRFLOW_HOME and PYTHONPATH
+            env = os.environ.copy()
+            env["AIRFLOW_HOME"] = self.airflow_home
+
+            # Add backend directory to PYTHONPATH for Django imports
+            backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            current_pythonpath = env.get("PYTHONPATH", "")
+            env["PYTHONPATH"] = f"{backend_dir}:{current_pythonpath}" if current_pythonpath else backend_dir
+
+            # Execute the command
+            result = subprocess.run(
+                cmd,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=False,
             )
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
+
+            if result.returncode == 0:
+                print(f"Successfully triggered DAG {dag_id}")
+                return True
+            else:
+                print(f"Error triggering DAG {dag_id}: {result.stderr}")
+                return False
+
+        except Exception as e:
             print(f"Error triggering DAG {dag_id}: {e}")
-            return None
+            return False
 
 
 # Global client instance

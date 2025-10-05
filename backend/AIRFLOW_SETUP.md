@@ -23,17 +23,19 @@ airflow db migrate
 
 ### Running Airflow
 
-To start Airflow in standalone mode (includes webserver, scheduler, and creates an admin user):
+**Important**: Always use the provided script to start Airflow, as it sets up the necessary environment variables:
 
 ```bash
 ./start_airflow.sh
 ```
 
-Or manually:
-```bash
-export AIRFLOW_HOME=~/airflow
-airflow standalone
-```
+The script will:
+- Set AIRFLOW_HOME to ~/airflow
+- Add the backend directory to PYTHONPATH (for Django imports)
+- Create a symlink from ~/airflow/dags to backend/dags
+- Start Airflow in standalone mode
+
+**Note**: If Airflow is already running, you must restart it using this script for DAGs to load correctly.
 
 ### Accessing the Airflow UI
 
@@ -59,7 +61,9 @@ Once Airflow is running, you can access the web UI at:
 
 3. **Triggering DAGs from Django**:
    - Use the `AirflowClient` in `core/airflow_client.py`
+   - The client uses the Airflow CLI to trigger DAGs (not the REST API)
    - Example: `airflow_client.trigger_dag('dag_id', conf={'param': 'value'})`
+   - Returns `True` if successful, `False` otherwise
 
 ### Startup Report ETL Pipeline
 
