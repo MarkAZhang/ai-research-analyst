@@ -11,12 +11,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps['theme']}
       className="toaster group"
       position="top-right"
-      toastOptions={{
-        classNames: {
-          success: 'bg-green-600 text-white border-green-600',
-          error: 'bg-red-600 text-white border-red-600'
-        }
-      }}
       style={
         {
           '--normal-bg': 'var(--popover)',
