@@ -6,29 +6,32 @@ This DAG performs the following steps:
 2. Transform: Replace {{name}} placeholders in the prompt with the actual name
 3. Load: Update the report with the final text and set status to completed/failed
 """
+
 import os
 from datetime import datetime
 
 from airflow.sdk import dag, task, Param
 
-# Database path - relative to backend directory
-backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(backend_dir, 'dev.sqlite3')
+# Database path - use absolute path to avoid symlink issues
+# When DAG is accessed via symlink, we need to resolve to the real path
+dag_file_path = os.path.realpath(__file__)
+backend_dir = os.path.dirname(os.path.dirname(dag_file_path))
+DB_PATH = os.path.join(backend_dir, "dev.sqlite3")
 
 
 @dag(
-    dag_id='startup_report_etl',
+    dag_id="startup_report_etl",
     schedule=None,  # Only triggered manually/programmatically
     start_date=datetime(2025, 1, 1),
     catchup=False,
     params={
-        'report_id': Param(
+        "report_id": Param(
             default=None,
-            type=['null', 'integer'],
-            description='ID of the StartupReportDbModel to process',
+            type=["null", "integer"],
+            description="ID of the StartupReportDbModel to process",
         )
     },
-    tags=['startup_report', 'etl'],
+    tags=["startup_report", "etl"],
 )
 def startup_report_etl_dag():
     """ETL pipeline for processing startup reports."""
@@ -50,12 +53,15 @@ def startup_report_etl_dag():
 
         try:
             # Fetch report with its associated prompt
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT r.name, p.prompt
                 FROM core_startupreport r
                 LEFT JOIN core_startupreportprompt p ON r.prompt_id = p.id
                 WHERE r.id = ?
-            """, (report_id,))
+            """,
+                (report_id,),
+            )
 
             result = cursor.fetchone()
 
@@ -68,9 +74,9 @@ def startup_report_etl_dag():
                 raise ValueError(f"Report {report_id} has no associated prompt")
 
             return {
-                'report_id': report_id,
-                'name': name,
-                'prompt_text': prompt_text,
+                "report_id": report_id,
+                "name": name,
+                "prompt_text": prompt_text,
             }
         finally:
             conn.close()
@@ -85,15 +91,15 @@ def startup_report_etl_dag():
         Returns:
             Dictionary with report_id and final_text (transformed prompt)
         """
-        name = extracted_data['name']
-        prompt_text = extracted_data['prompt_text']
+        name = extracted_data["name"]
+        prompt_text = extracted_data["prompt_text"]
 
         # Replace {{name}} with the actual name
-        final_text = prompt_text.replace('{{name}}', name)
+        final_text = prompt_text.replace("{{name}}", name)
 
         return {
-            'report_id': extracted_data['report_id'],
-            'final_text': final_text,
+            "report_id": extracted_data["report_id"],
+            "final_text": final_text,
         }
 
     @task()
@@ -105,24 +111,27 @@ def startup_report_etl_dag():
         """
         import sqlite3
 
-        report_id = transformed_data['report_id']
-        final_text = transformed_data['final_text']
+        report_id = transformed_data["report_id"]
+        final_text = transformed_data["final_text"]
 
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE core_startupreport
                 SET report_text = ?, generation_status = 'completed'
                 WHERE id = ?
-            """, (final_text, report_id))
+            """,
+                (final_text, report_id),
+            )
 
             conn.commit()
         finally:
             conn.close()
 
-    @task(trigger_rule='one_failed')
+    @task(trigger_rule="one_failed")
     def handle_failure(**context) -> None:
         """Handle DAG failure by setting report status to failed.
 
@@ -130,21 +139,25 @@ def startup_report_etl_dag():
         """
         import sqlite3
 
-        report_id = context['params']['report_id']
+        report_id = context["params"]["report_id"]
 
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE core_startupreport
                 SET generation_status = 'failed'
                 WHERE id = ?
-            """, (report_id,))
+            """,
+                (report_id,),
+            )
 
             conn.commit()
         except Exception as e:
             print(f"Error setting failure status for report {report_id}: {e}")
+            raise
         finally:
             conn.close()
 

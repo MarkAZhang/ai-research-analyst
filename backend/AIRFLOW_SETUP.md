@@ -81,8 +81,9 @@ To access the Django database in your DAG:
 import os
 import sqlite3
 
-# Get database path
-backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Get database path - use realpath to resolve symlinks
+dag_file_path = os.path.realpath(__file__)
+backend_dir = os.path.dirname(os.path.dirname(dag_file_path))
 DB_PATH = os.path.join(backend_dir, 'dev.sqlite3')
 
 # Use SQLite connection
