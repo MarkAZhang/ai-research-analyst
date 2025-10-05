@@ -77,7 +77,11 @@ def create_startup_reports(
     if not payload.names:
         raise HttpError(400, 'Names list cannot be empty')
 
-    create_multiple_startup_reports(payload.names)
+    try:
+        create_multiple_startup_reports(payload.names)
+    except ValueError as e:
+        raise HttpError(400, str(e))
+
     return DefaultSuccessResponse()
 
 

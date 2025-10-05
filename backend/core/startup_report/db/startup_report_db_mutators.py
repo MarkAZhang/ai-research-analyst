@@ -5,9 +5,18 @@ from core.startup_report.db.startup_report_prompt_db_model import (
 
 
 def create_multiple_startup_reports(names: list[str]) -> list[StartupReportDbModel]:
-    """Create multiple startup reports from a list of names using bulk_create."""
+    """Create multiple startup reports from a list of names using bulk_create.
+
+    Raises:
+        ValueError: If no prompt exists in the database.
+    """
     # Get the most recent prompt to link to the new reports
     most_recent_prompt = StartupReportPromptDbModel.objects.order_by('-created_at').first()
+
+    if not most_recent_prompt:
+        raise ValueError(
+            'No prompt found. Please create a prompt before creating reports.'
+        )
 
     reports_to_create = [
         StartupReportDbModel(
