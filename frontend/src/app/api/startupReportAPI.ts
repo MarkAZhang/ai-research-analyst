@@ -6,6 +6,7 @@ type GetStartupReportsResponse =
 type DefaultSuccessResponse = components['schemas']['DefaultSuccessResponse']
 type GetCurrentPromptResponse =
   components['schemas']['GetCurrentPromptResponse']
+type StartupReportResponse = components['schemas']['StartupReportResponse']
 
 const startupReportAPI = {
   /**
@@ -60,6 +61,17 @@ const startupReportAPI = {
    */
   getCurrentPrompt: (): Promise<GetCurrentPromptResponse> => {
     return BackendAPI.GET('/api/startup-report/current-prompt')
+  },
+
+  /**
+   * Get a single startup report by ID
+   * @param reportId - The ID of the report to fetch
+   * @returns Promise with the report details
+   */
+  getStartupReport: (reportId: number): Promise<StartupReportResponse> => {
+    return BackendAPI.GET('/api/startup-report/{report_id}', {
+      path: { report_id: reportId }
+    })
   }
 }
 

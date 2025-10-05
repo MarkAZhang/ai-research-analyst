@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { ChevronDown, Loader2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import dayjs from 'dayjs'
@@ -28,6 +29,7 @@ dayjs.extend(relativeTime)
 type StartupReport = components['schemas']['StartupReportResponse']
 
 export default function StartupReportsPage(): React.JSX.Element {
+  const router = useRouter()
   const [reports, setReports] = useState<StartupReport[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isCreating, setIsCreating] = useState<boolean>(false)
@@ -287,8 +289,12 @@ export default function StartupReportsPage(): React.JSX.Element {
                 }
 
                 return (
-                  <TableRow key={report.id}>
-                    <TableCell>
+                  <TableRow
+                    key={report.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => router.push(`/startupReports/${report.id}`)}
+                  >
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedReportIds.has(report.id)}
