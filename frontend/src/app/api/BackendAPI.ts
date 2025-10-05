@@ -37,7 +37,9 @@ const BackendAPI = {
         : unknown
       : never
   > => {
-    const response = await client.GET(path as any, options as any)
+    // openapi-fetch expects parameters in a params object
+    const fetchOptions = options ? { params: options } : undefined
+    const response = await client.GET(path as any, fetchOptions as any)
 
     if (response.error) {
       throw new Error(`API Error: ${JSON.stringify(response.error)}`)
