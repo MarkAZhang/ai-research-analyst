@@ -49,12 +49,12 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
       case 'pending':
         return {
           text: 'Report generation is pending...',
-          color: 'text-yellow-600'
+          color: 'text-gray-600'
         }
       case 'started':
         return {
           text: 'Report is being generated...',
-          color: 'text-blue-600'
+          color: 'text-gray-600'
         }
       case 'failed':
         return { text: 'Report generation failed', color: 'text-red-600' }
@@ -87,7 +87,7 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
     <div className="container mx-auto py-8 max-w-[1200px]">
       <button
         onClick={handleBackClick}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+        className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Reports
@@ -96,13 +96,12 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
       <h1 className="text-3xl font-bold mb-6">{report.name}</h1>
 
       <div className="mb-6">
-        <Button
+        <button
           onClick={() => setShowPromptModal(true)}
-          variant="outline"
-          className="bg-gray-100"
+          className="flex items-center text-sm text-gray-600 hover:text-gray-900"
         >
           View Prompt
-        </Button>
+        </button>
       </div>
 
       {report.generation_status === 'completed' ? (
@@ -111,7 +110,7 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
         </div>
       ) : (
         statusDisplay && (
-          <div className={`text-lg ${statusDisplay.color}`}>
+          <div className={`text-sm ${statusDisplay.color}`}>
             {statusDisplay.text}
           </div>
         )
