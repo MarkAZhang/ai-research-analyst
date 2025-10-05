@@ -87,7 +87,7 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
     <div className="container mx-auto py-8 max-w-[1200px]">
       <button
         onClick={handleBackClick}
-        className="flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 mb-4"
+        className="flex items-center gap-1 text-sm text-gray-700 hover:text-gray-900 mb-4 cursor-pointer"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Reports
@@ -98,7 +98,7 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
       <div className="mb-6">
         <button
           onClick={() => setShowPromptModal(true)}
-          className="flex items-center text-xs text-gray-500 hover:text-gray-900"
+          className="flex items-center text-xs text-gray-500 hover:text-gray-900 cursor-pointer"
         >
           View Prompt
         </button>
