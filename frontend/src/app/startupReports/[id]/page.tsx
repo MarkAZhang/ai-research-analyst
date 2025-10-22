@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
+import ReactMarkdown from 'react-markdown'
 import startupReportAPI from '@/app/api/startupReportAPI'
 import { Button } from '@/components/lib/button'
 import { components } from '@/app/api/generated-api-schema'
@@ -105,8 +105,8 @@ export default function StartupReportDetailsPage(): React.JSX.Element {
       </div>
 
       {report.generation_status === 'completed' ? (
-        <div className="prose max-w-none whitespace-pre-wrap">
-          {report.report_text}
+        <div className="prose max-w-none">
+          <ReactMarkdown>{report.report_text}</ReactMarkdown>
         </div>
       ) : (
         statusDisplay && (
