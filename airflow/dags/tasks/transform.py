@@ -32,7 +32,7 @@ def transform(extracted_data: dict) -> dict:
 
     # Call OpenAI API with the hydrated prompt
     response = client.chat.completions.create(
-        model="gpt-4o-mini-search-preview",
+        model="gpt-5-search-api",
         web_search_options={
             # Optional: configure search context size ('low', 'medium', 'high')
             "search_context_size": "medium",
