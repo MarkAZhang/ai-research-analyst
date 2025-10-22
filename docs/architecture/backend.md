@@ -36,7 +36,7 @@ Whenever you add or modify an API route, please thoroughly test it in the approp
 
 ### Testing
 
-We use pytest for testing. Tests are in backend/tests.
+We use pytest for testing. Tests should be placed in backend/tests.
 
 The test directory mirrors the directory structure of the src code.
 For example, the tests for a file `backend/core/api.py` can be found in `backend/tests/core/test_api.py`.

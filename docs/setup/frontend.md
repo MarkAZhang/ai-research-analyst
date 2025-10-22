@@ -8,7 +8,11 @@ Install NextJS inside the root folder. Note that node and nvm are already instal
 ### Shadcn UI
 Install and use shadcn for the component library. Use shadcn whenever appropriate, for example for buttons or layout elements.
 
+This will require you to install tailwindcss. Please also install "@tailwindcss/typography".
+
 ### Type-checking
+Install typescript.
+
 In package.json, add a script named "type-check": "tsc --noEmit".
 
 Add a TypeScript declaration file at src/types/css.d.ts that tells TypeScript that importing a .css file returns void.
@@ -23,3 +27,7 @@ Add a .prettierrc with:
   "trailingComma": "none",
   "singleQuote": true
 }
+
+### Testing
+
+Please install Jest with React Testing Library (RTL) and Mock Servier Worker (MSW) for testing.

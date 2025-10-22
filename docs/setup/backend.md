@@ -8,18 +8,18 @@ Install and use pip-tools when managing Python dependencies. Create a separate r
 Also include a separate requirements.dev.in file, also managed by pip-tools.
 
 ### Django
-Install Django.
+Install django and django-cors-headers.
 
 Create a new django project called django_project and a new app called core.
 
-For now, always use a local sqlite database as the default with:
+For initial setup, always use a local sqlite database as the default with:
 "NAME": BASE_DIR / "dev.sqlite3"
 
 Create a local superuser with username: admin and password: password, so
-I can access the Django admin panel.
+the local developer can access the Django admin panel.
 
 ### Pydantic and Pyright
-Install pyright and pre-commit in requirements.dev.in.
+Install pyright, pre-commit, and django-stubs in requirements.dev.in.
 
 ### Pre-commit hooks
 Install pre-commit in requirements.dev.in.
@@ -42,4 +42,8 @@ Also create/default_success_response.py. Define DefaultSuccessResponse which ext
 
 ### Transactions and Typed Responses
 
-Copy docs/setup/backend/typed_response_transaction_router.py to backend/core.
+Copy docs/setup/backend/typed_response_transaction_router.py into the backend/core directory.
+We use this router to ensure every API request is wrapped in a transaction and also allow inferring response type from function declaration.
+
+### Testing
+Install pytest and pytest-django in requirements.dev.in.
