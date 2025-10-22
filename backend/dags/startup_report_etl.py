@@ -3,20 +3,26 @@ Airflow DAG for processing startup reports with ETL pipeline.
 
 This DAG performs the following steps:
 1. Extract: Fetch the StartupReport's name and prompt text from SQLite database
-2. Transform: Replace {{name}} placeholders in the prompt with the actual name
+2. Transform: Hydrate prompt with name, send to OpenAI API, and receive LLM response
 3. Load: Update the report with the final text and set status to completed/failed
 """
 
 import os
 from datetime import datetime
+from pathlib import Path
 
 from airflow.sdk import dag, task, Param
+from dotenv import load_dotenv
 
 # Database path - use absolute path to avoid symlink issues
 # When DAG is accessed via symlink, we need to resolve to the real path
 dag_file_path = os.path.realpath(__file__)
 backend_dir = os.path.dirname(os.path.dirname(dag_file_path))
 DB_PATH = os.path.join(backend_dir, "dev.sqlite3")
+
+# Load environment variables from .env file
+env_path = Path(backend_dir) / ".env"
+load_dotenv(dotenv_path=env_path)
 
 
 def _set_report_failed(context):
@@ -109,19 +115,40 @@ def startup_report_etl_dag():
 
     @task(on_failure_callback=_set_report_failed)
     def transform(extracted_data: dict) -> dict:
-        """Transform: Replace {{name}} placeholders in the prompt with the actual name.
+        """Transform: Hydrate prompt with name, send to OpenAI API, and return LLM response.
 
         Args:
             extracted_data: Dictionary from extract step containing name and prompt_text
 
         Returns:
-            Dictionary with report_id and final_text (transformed prompt)
+            Dictionary with report_id and final_text (OpenAI response)
         """
+        import os
+        from openai import OpenAI
+
         name = extracted_data["name"]
         prompt_text = extracted_data["prompt_text"]
 
         # Replace {{name}} with the actual name
-        final_text = prompt_text.replace("{{name}}", name)
+        hydrated_prompt = prompt_text.replace("{{name}}", name)
+
+        # Initialize OpenAI client with API key from environment
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+
+        client = OpenAI(api_key=api_key)
+
+        # Call OpenAI API with the hydrated prompt
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": hydrated_prompt}
+            ]
+        )
+
+        # Extract the LLM response text
+        final_text = response.choices[0].message.content
 
         return {
             "report_id": extracted_data["report_id"],
