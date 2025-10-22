@@ -3,4 +3,3 @@ django-ninja
 django-cors-headers
 pydantic
 pyright
-apache-airflow

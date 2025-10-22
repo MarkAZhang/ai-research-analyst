@@ -1,0 +1,23 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment variables
+.env
+.env.local
+
+# Airflow
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
