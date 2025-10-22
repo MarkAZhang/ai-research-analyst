@@ -1,23 +1,39 @@
 """Utility module for triggering Airflow DAGs from Django."""
-import json
 import os
-import subprocess
 from typing import Any
+
+import requests
+from requests.auth import HTTPBasicAuth
 
 
 class AirflowClient:
-    """Client for interacting with Airflow via CLI."""
+    """Client for interacting with Airflow via REST API.
 
-    def __init__(self, airflow_home: str = "~/airflow"):
+    For Airflow 3.x, uses HTTP Basic Authentication for the REST API.
+    """
+
+    def __init__(
+        self,
+        base_url: str = "http://localhost:8080",
+        username: str | None = None,
+        password: str | None = None,
+    ):
         """Initialize the Airflow client.
 
         Args:
-            airflow_home: Path to Airflow home directory
+            base_url: Base URL of the Airflow webserver (default: http://localhost:8080)
+            username: Username for basic auth (optional, defaults to 'admin')
+            password: Password for basic auth (optional, defaults to 'admin')
         """
-        self.airflow_home = os.path.expanduser(airflow_home)
+        self.base_url = base_url.rstrip("/")
+        self.username = username or os.getenv("AIRFLOW_USERNAME", "admin")
+        self.password = password or os.getenv("AIRFLOW_PASSWORD", "admin")
+        self.session = requests.Session()
+        # Use HTTP Basic Authentication
+        self.session.auth = HTTPBasicAuth(self.username, self.password)
 
     def trigger_dag(self, dag_id: str, conf: dict[str, Any] | None = None) -> bool:
-        """Trigger an Airflow DAG run using the Airflow CLI.
+        """Trigger an Airflow DAG run using the REST API.
 
         Args:
             dag_id: ID of the DAG to trigger
@@ -27,36 +43,29 @@ class AirflowClient:
             True if successful, False otherwise
         """
         try:
-            # Build the command
-            cmd = [
-                "airflow",
-                "dags",
-                "trigger",
-                dag_id,
-            ]
+            # Construct the API endpoint (v2 for Airflow 3.x)
+            url = f"{self.base_url}/api/v2/dags/{dag_id}/dagRuns"
 
-            # Add conf parameter if provided
+            # Build the request payload
+            payload: dict[str, Any] = {}
             if conf:
-                cmd.extend(["--conf", json.dumps(conf)])
+                payload["conf"] = conf
 
-            # Set environment with AIRFLOW_HOME
-            env = os.environ.copy()
-            env["AIRFLOW_HOME"] = self.airflow_home
-
-            # Execute the command
-            result = subprocess.run(
-                cmd,
-                env=env,
-                capture_output=True,
-                text=True,
-                check=False,
+            # Make the POST request to trigger the DAG
+            response = self.session.post(
+                url,
+                json=payload,
+                headers={"Content-Type": "application/json"},
             )
 
-            if result.returncode == 0:
+            if response.status_code in (200, 201):
                 print(f"Successfully triggered DAG {dag_id}")
                 return True
             else:
-                print(f"Error triggering DAG {dag_id}: {result.stderr}")
+                print(
+                    f"Error triggering DAG {dag_id}: "
+                    f"Status {response.status_code}, {response.text}"
+                )
                 return False
 
         except Exception as e:
