@@ -1,3 +1,4 @@
+from core.airflow_client import airflow_client
 from core.startup_report.db.startup_report_db_model import StartupReportDbModel
 from core.startup_report.db.startup_report_prompt_db_model import (
     StartupReportPromptDbModel,
@@ -6,6 +7,8 @@ from core.startup_report.db.startup_report_prompt_db_model import (
 
 def create_multiple_startup_reports(names: list[str]) -> list[StartupReportDbModel]:
     """Create multiple startup reports from a list of names using bulk_create.
+
+    After creating the reports, triggers an Airflow DAG for each report.
 
     Raises:
         ValueError: If no prompt exists in the database.
@@ -28,7 +31,21 @@ def create_multiple_startup_reports(names: list[str]) -> list[StartupReportDbMod
         )
         for name in names
     ]
-    return list(StartupReportDbModel.objects.bulk_create(reports_to_create))
+    created_reports = list(StartupReportDbModel.objects.bulk_create(reports_to_create))
+
+    # Trigger Airflow DAG for each created report
+    for report in created_reports:
+        # Update status to 'started' before triggering the DAG
+        report.generation_status = 'started'
+        report.save()
+
+        # Trigger the DAG with the report ID
+        airflow_client.trigger_dag(
+            dag_id='startup_report_etl',
+            conf={'report_id': report.id}  # type: ignore[reportAttributeAccessIssue]
+        )
+
+    return created_reports
 
 
 def delete_multiple_startup_reports(report_ids: list[int]) -> int:
