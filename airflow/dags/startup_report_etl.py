@@ -7,24 +7,17 @@ This DAG performs the following steps:
 3. Load: Update the report with the final text and set status to completed/failed
 """
 
-import os
 from datetime import datetime
-from pathlib import Path
 
 from airflow.sdk import dag, Param
-from dotenv import load_dotenv
 
+from common import load_environment
 from tasks.extract import extract
 from tasks.transform import transform
 from tasks.load import load
 
-# Load environment variables from .env file
-# Navigate up to the backend directory to find .env
-dag_file_path = os.path.realpath(__file__)
-dags_dir = os.path.dirname(dag_file_path)
-backend_dir = os.path.dirname(dags_dir)
-env_path = Path(backend_dir) / ".env"
-load_dotenv(dotenv_path=env_path)
+# Load environment variables from .env file in airflow directory
+load_environment()
 
 
 @dag(
