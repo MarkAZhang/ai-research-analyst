@@ -141,10 +141,12 @@ def startup_report_etl_dag():
 
         # Call OpenAI API with the hydrated prompt
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "user", "content": hydrated_prompt}
-            ]
+            model="gpt-4o-mini-search-preview",
+            web_search_options={
+                # Optional: configure search context size ('low', 'medium', 'high')
+                "search_context_size": "medium",
+            },
+            messages=[{"role": "user", "content": hydrated_prompt}],
         )
 
         # Extract the LLM response text
