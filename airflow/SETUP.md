@@ -10,12 +10,25 @@ This project uses Apache Airflow 3.1.0 for workflow orchestration.
 
 ### Installation
 
-1. Install dependencies:
+1. Create a virtual environment (from the `airflow` directory):
+```bash
+cd airflow
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. The Airflow database has already been initialized. If you need to reset it:
+Alternatively, if you need to regenerate requirements.txt from requirements.in:
+```bash
+pip-compile requirements.in
+pip install -r requirements.txt
+```
+
+3. The Airflow database has already been initialized. If you need to reset it:
 ```bash
 export AIRFLOW_HOME=~/airflow
 airflow db migrate
@@ -31,7 +44,8 @@ To start Airflow in standalone mode:
 
 The script will:
 - Set AIRFLOW_HOME to ~/airflow
-- Create a symlink from ~/airflow/dags to backend/dags
+- Create a symlink from ~/airflow/dags to airflow/dags
+- Add the backend directory to PYTHONPATH for database access
 - Start Airflow in standalone mode (webserver, scheduler, and creates admin user)
 
 ### Accessing the Airflow UI
@@ -44,20 +58,20 @@ Once Airflow is running, you can access the web UI at:
 
 - Airflow home directory: `~/airflow`
 - Configuration file: `~/airflow/airflow.cfg`
-- DAGs folder: `backend/dags` (configured in start_airflow.sh)
+- DAGs folder: `airflow/dags` (symlinked from ~/airflow/dags)
 
 ## Django-Airflow Integration
 
 ### How It Works
 
-1. **DAG Location**: DAGs are stored in `backend/dags/`
+1. **DAG Location**: DAGs are stored in `airflow/dags/`
 2. **Database Access**: DAGs access the Django database directly using SQLite connections
    - Database path: `backend/dev.sqlite3`
    - Uses raw SQL queries via `sqlite3` module
    - No Django ORM dependencies in DAGs
 
 3. **Triggering DAGs from Django**:
-   - Use the `AirflowClient` in `core/airflow_client.py`
+   - Use the `AirflowClient` in `backend/core/airflow_client.py`
    - The client uses the Airflow CLI to trigger DAGs (not the REST API)
    - Example: `airflow_client.trigger_dag('dag_id', conf={'param': 'value'})`
    - Returns `True` if successful, `False` otherwise
@@ -66,15 +80,17 @@ Once Airflow is running, you can access the web UI at:
 
 The `startup_report_etl` DAG performs the following:
 
-1. **Extract**: Fetches the StartupReport's name and prompt text from the database
-2. **Transform**: Replaces `{{name}}` placeholders in the prompt with the actual startup name
-3. **Load**: Updates the report with the final text and sets status to 'completed' (or 'failed' on error)
+1. **Extract** (`tasks/extract.py`): Fetches the StartupReport's name and prompt text from the database
+2. **Transform** (`tasks/transform.py`): Hydrates prompt with name, sends to OpenAI API, and receives LLM response
+3. **Load** (`tasks/load.py`): Updates the report with the final text and sets status to 'completed' (or 'failed' on error)
 
 This DAG is automatically triggered when new startup reports are created via the API.
 
+The tasks are modular and located in `airflow/dags/tasks/` for better organization and reusability.
+
 ### Creating DAGs
 
-Place your DAG files in the `backend/dags/` directory. Airflow will automatically detect and load them.
+Place your DAG files in the `airflow/dags/` directory. Airflow will automatically detect and load them.
 
 To access the Django database in your DAG:
 ```python
