@@ -19,6 +19,32 @@ backend_dir = os.path.dirname(os.path.dirname(dag_file_path))
 DB_PATH = os.path.join(backend_dir, "dev.sqlite3")
 
 
+def _set_report_failed(context):
+    """Helper function to set report status to failed when DAG fails."""
+    import sqlite3
+
+    report_id = context["params"]["report_id"]
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            """
+            UPDATE core_startupreport
+            SET generation_status = 'failed'
+            WHERE id = ?
+        """,
+            (report_id,),
+        )
+
+        conn.commit()
+    except Exception as e:
+        print(f"Error setting failure status for report {report_id}: {e}")
+    finally:
+        conn.close()
+
+
 @dag(
     dag_id="startup_report_etl",
     schedule=None,  # Only triggered manually/programmatically
@@ -36,7 +62,7 @@ DB_PATH = os.path.join(backend_dir, "dev.sqlite3")
 def startup_report_etl_dag():
     """ETL pipeline for processing startup reports."""
 
-    @task()
+    @task(on_failure_callback=_set_report_failed)
     def extract(report_id: int) -> dict:
         """Extract: Fetch the StartupReport's name and prompt text from database.
 
@@ -81,7 +107,7 @@ def startup_report_etl_dag():
         finally:
             conn.close()
 
-    @task()
+    @task(on_failure_callback=_set_report_failed)
     def transform(extracted_data: dict) -> dict:
         """Transform: Replace {{name}} placeholders in the prompt with the actual name.
 
@@ -102,7 +128,7 @@ def startup_report_etl_dag():
             "final_text": final_text,
         }
 
-    @task()
+    @task(on_failure_callback=_set_report_failed)
     def load(transformed_data: dict) -> None:
         """Load: Update the report with final text and set status to completed.
 
@@ -131,47 +157,13 @@ def startup_report_etl_dag():
         finally:
             conn.close()
 
-    @task(trigger_rule="one_failed")
-    def handle_failure(**context) -> None:
-        """Handle DAG failure by setting report status to failed.
-
-        This task only runs when upstream tasks fail.
-        """
-        import sqlite3
-
-        report_id = context["params"]["report_id"]
-
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-
-        try:
-            cursor.execute(
-                """
-                UPDATE core_startupreport
-                SET generation_status = 'failed'
-                WHERE id = ?
-            """,
-                (report_id,),
-            )
-
-            conn.commit()
-        except Exception as e:
-            print(f"Error setting failure status for report {report_id}: {e}")
-            raise
-        finally:
-            conn.close()
-
     # Get report_id from params (templated value)
     report_id = "{{ params.report_id }}"  # type: ignore[reportArgumentType]
 
     # Define the ETL pipeline flow
     extracted_data = extract(report_id)  # type: ignore[reportArgumentType]
     transformed_data = transform(extracted_data)  # type: ignore[reportArgumentType]
-    load_task = load(transformed_data)  # type: ignore[reportArgumentType]
-    failure_task = handle_failure()
-
-    # Set up dependencies: failure handler runs if extract, transform, or load fails
-    [extracted_data, transformed_data, load_task] >> failure_task  # type: ignore[reportOperatorIssue]
+    load(transformed_data)  # type: ignore[reportArgumentType]
 
 
 # Instantiate the DAG
