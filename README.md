@@ -1,4 +1,4 @@
-# ai_research_analyst
+# AI Research Analyst
 
 Request research reports for multiple startups.
 
