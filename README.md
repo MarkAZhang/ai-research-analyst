@@ -1,4 +1,6 @@
-# Reports AI
+# ai_research_analyst
+
+Request research reports for multiple startups.
 
 ## Screenshots
 
